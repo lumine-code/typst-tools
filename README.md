@@ -5,7 +5,8 @@ Compile Typst documents with build tools, compile-on-save, and PDF viewer integr
 ## Features
 
 - **Compilation**: build documents using the `typst` compiler with configurable output format.
-- **Compile-on-save**: automatically recompile when the file is saved.
+- **Compile-on-save**: automatically recompile observed files in the background, even after their editor is closed.
+- **Observed files**: track every file watched for compile-on-save from a searchable list and a status-bar counter.
 - **PDF viewing**: open output PDFs internally via [pdf-view](https://github.com/lumine-code/pdf-view).
 - **Linter integration**: error and warning reporting via `linter-indie` with clickable references to source locations.
 - **Multiple builds**: compile multiple files simultaneously with independent build states.
@@ -27,11 +28,15 @@ If `typst` is not in your PATH, set the full path in the package settings under 
 
 The status bar item shows the build state of the active file with a live timer (`Typ` idle, `Typ*` compile-on-save enabled). Left click compiles, alt-left click toggles compile-on-save, middle click splits PDF and Typst source, and right click interrupts the build and clears the linter. The item stays visible while viewing the output PDF, and opening a PDF during a build waits for completion before showing the updated file. Each file tracks its own build state independently, so several documents can compile at the same time.
 
+Compile-on-save is tracked per file path rather than per editor, so a file keeps recompiling on every change even after you close its tab. A second status-bar item on the right shows how many files are currently observed and is hidden when there are none. Left click it to open the observed-files list, where **Enter** opens the selected file and **Ctrl+D** stops observing it; right click clears every observed file at once. Observed files are not remembered between sessions.
+
 ## Commands
 
 Commands available in `atom-workspace`:
 
-- `typst-tools:install-typst`: download and install the Typst binary from GitHub releases.
+- `typst-tools:install-typst`: download and install the Typst binary from GitHub releases,
+- `typst-tools:observed-files`: list the files observed for compile-on-save,
+- `typst-tools:clear-all-observed-files`: stop observing every file at once.
 
 Commands available in `atom-text-editor[data-grammar~="typst"]`:
 
@@ -58,7 +63,7 @@ The status-bar item can be restyled from your `styles.less`, e.g.:
 ## Services
 
 - **typst-tools** (`1.0.0`): provided to let other packages drive Typst compilation — subscribe to build events (`onDidStartBuild`, `onDidFinishBuild`, `onDidFailBuild`, `onDidChangeBuildStatus`), query status (`getStatus`, `isBuilding`), and control builds (`compile`, `interrupt`, `interruptAll`, `toggleCompileOnSave`).
-- **status-bar** (`^1.0.0`): consumed to show the build state and timer in the status bar.
+- **status-bar** (`^1.0.0`): consumed to show the build state and timer, and the observed-file count, in the status bar.
 - **linter-indie** (`^1.0.0`): consumed to report Typst errors and warnings in the linter panel.
 
 ## Contributing
