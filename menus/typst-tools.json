@@ -10,6 +10,12 @@
             { "label": "Compile on Save", "command": "typst-tools:watch" },
             { "label": "Open PDF", "command": "typst-tools:open-pdf" },
             { "type": "separator" },
+            { "label": "Observed Files", "command": "typst-tools:observed-files" },
+            {
+              "label": "Clear All Observed Files",
+              "command": "typst-tools:clear-all-observed-files"
+            },
+            { "type": "separator" },
             { "label": "Interrupt", "command": "typst-tools:interrupt" },
             { "label": "Interrupt All", "command": "typst-tools:interrupt-all" },
             { "type": "separator" },

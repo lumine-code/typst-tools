@@ -56,3 +56,13 @@
     opacity: 0.4;
   }
 }
+
+.typst-tools-observed-status {
+  padding: 0 0.5em;
+  cursor: default;
+
+  &:hover {
+    background-color: var(--background-color-highlight);
+    opacity: 0.8;
+  }
+}

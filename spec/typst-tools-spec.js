@@ -1,21 +1,46 @@
 const path = require("path");
+const fs = require("fs");
+const os = require("os");
 
 describe("typst-tools", () => {
-  let workspaceElement, mainModule;
+  let workspaceElement, mainModule, tempDirs;
+
+  function makeTempDir() {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "typst-tools-spec-"));
+    tempDirs.push(dir);
+    return dir;
+  }
 
   beforeEach(async () => {
+    tempDirs = [];
     workspaceElement = atom.views.getView(atom.workspace);
     jasmine.attachToDOM(workspaceElement);
     const pack = await atom.packages.activatePackage("typst-tools");
     mainModule = pack.mainModule;
   });
 
+  afterEach(() => {
+    for (const dir of tempDirs) {
+      try {
+        fs.rmSync(dir, { recursive: true, force: true });
+      } catch {
+        // Windows can refuse to delete recently watched directories.
+      }
+    }
+  });
+
   describe("command registration", () => {
-    it("registers the installer command on the workspace", () => {
+    it("registers the installer and observed-file commands on the workspace", () => {
       const commands = atom.commands
         .findCommands({ target: workspaceElement })
         .map((command) => command.name);
-      expect(commands).toContain("typst-tools:install-typst");
+      for (const name of [
+        "typst-tools:install-typst",
+        "typst-tools:observed-files",
+        "typst-tools:clear-all-observed-files",
+      ]) {
+        expect(commands).toContain(name);
+      }
     });
 
     it("registers the build commands on typst editors", async () => {
@@ -269,17 +294,85 @@ describe("typst-tools", () => {
     });
   });
 
+  describe("compile-on-save observation", () => {
+    it("observes files by path and tracks them in the status view", () => {
+      const dir = makeTempDir();
+      const file = path.join(dir, "doc.typ");
+      fs.writeFileSync(file, "#set page(width: 10cm)");
+
+      expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(true);
+      expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(true);
+      expect(mainModule.getCompileOnSaveFiles()).toEqual([path.resolve(file)]);
+      expect(mainModule.observedFilesStatusView.count).toBe(1);
+
+      // Enabling twice is a no-op.
+      expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(false);
+
+      expect(mainModule.setCompileOnSaveForFile(file, false)).toBe(true);
+      expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(false);
+      expect(mainModule.getCompileOnSaveFiles()).toEqual([]);
+      expect(mainModule.observedFilesStatusView.count).toBe(0);
+    });
+
+    it("keeps observing after the file's editor is destroyed", async () => {
+      const dir = makeTempDir();
+      const file = path.join(dir, "doc.typ");
+      fs.writeFileSync(file, "#set page(width: 10cm)");
+
+      const editor = await atom.workspace.open(file);
+      expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(true);
+      expect(mainModule.isCompileOnSaveEnabled(editor)).toBe(true);
+
+      editor.destroy();
+
+      // The observer is keyed by path, not by editor, so closing the editor
+      // must not stop compile-on-save.
+      expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(true);
+      expect(mainModule.observedFilesStatusView.count).toBe(1);
+
+      mainModule.setCompileOnSaveForFile(file, false);
+    });
+
+    it("clears every observed file at once", () => {
+      const dir = makeTempDir();
+      const files = ["a.typ", "b.typ"].map((name) => {
+        const file = path.join(dir, name);
+        fs.writeFileSync(file, "#set page(width: 10cm)");
+        mainModule.setCompileOnSaveForFile(file, true);
+        return file;
+      });
+
+      expect(mainModule.getCompileOnSaveFiles().length).toBe(files.length);
+      mainModule.clearCompileOnSaveFiles();
+      expect(mainModule.getCompileOnSaveFiles()).toEqual([]);
+      expect(mainModule.observedFilesStatusView.count).toBe(0);
+    });
+
+    it("rejects non-typst files", () => {
+      const file = path.join(os.tmpdir(), "doc.txt");
+      expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(false);
+      expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(false);
+    });
+  });
+
   describe("status bar integration", () => {
-    it("adds a left tile through the status-bar service", () => {
-      const tiles = [];
+    it("adds left and right tiles through the status-bar service", () => {
+      const left = [];
+      const right = [];
       mainModule.consumeStatusBar({
         addLeftTile(tile) {
-          tiles.push(tile);
+          left.push(tile);
+          return { destroy() {} };
+        },
+        addRightTile(tile) {
+          right.push(tile);
           return { destroy() {} };
         },
       });
-      expect(tiles.length).toBe(1);
-      expect(tiles[0].item.classList.contains("typst-tools-status")).toBe(true);
+      expect(left.length).toBe(1);
+      expect(left[0].item.classList.contains("typst-tools-status")).toBe(true);
+      expect(right.length).toBe(1);
+      expect(right[0].item.classList.contains("typst-tools-observed-status")).toBe(true);
     });
 
     it("reflects build status through element classes", () => {

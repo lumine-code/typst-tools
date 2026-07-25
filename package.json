@@ -21,7 +21,7 @@
   },
   "main": "./lib/main",
   "scripts": {
-    "test": "cd ../lumine && npm run test:only -- ../typst-tools/spec",
+    "test": "cd ../../lumine && npm run test:only -- ../pkg_lumine/typst-tools/spec",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -96,6 +96,9 @@
       "type": "boolean",
       "default": false
     }
+  },
+  "dependencies": {
+    "@lumine-code/select-list": "https://github.com/lumine-code/select-list.git#fbbc2d9660db6a2ff676c7a3baf7536f96ec34e6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
