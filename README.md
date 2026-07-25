@@ -4,38 +4,28 @@ Compile Typst documents with build tools, compile-on-save, and PDF viewer integr
 
 ## Features
 
-- **Compilation**: Build documents using the `typst` compiler with configurable output format.
-- **Compile-on-save**: Automatically recompile when the file is saved.
-- **PDF viewing**: Open output PDFs internally via [pdf-viewer](https://github.com/asiloisad/pulsar-pdf-viewer).
-- **Linter integration**: Error and warning reporting via `linter-indie`. With [linter-bundle](https://github.com/asiloisad/pulsar-linter-bundle), errors display clickable references to source locations.
-- **Multiple builds**: Compile multiple files simultaneously with independent build states.
-- **Built-in installer**: Download the Typst binary directly from GitHub releases.
+- **Compilation**: build documents using the `typst` compiler with configurable output format.
+- **Compile-on-save**: automatically recompile when the file is saved.
+- **PDF viewing**: open output PDFs internally via [pdf-view](https://github.com/lumine-code/pdf-view).
+- **Linter integration**: error and warning reporting via `linter-indie` with clickable references to source locations.
+- **Multiple builds**: compile multiple files simultaneously with independent build states.
+- **Built-in installer**: download the Typst binary directly from GitHub releases.
 
 ## Installation
 
-To install `typst-tools` search for [typst-tools](https://web.pulsar-edit.dev/packages/typst-tools) in the Install pane of the Pulsar settings or run `ppm install typst-tools`. Alternatively, you can run `ppm install asiloisad/pulsar-typst-tools` to install a package directly from the GitHub repository.
+To install `typst-tools` search for _typst-tools_ in the Install pane of the Lumine settings or run `lumine --install lumine-code/typst-tools`.
 
-## Installing Typst
+## Usage
 
-This package requires the `typst` binary. You can install it in several ways:
-
-**Via the package:**
-
-Run the `Typst Tools: Install Typst` command from the command palette. This downloads the latest Typst release from GitHub and places the binary in the package's `bin/` directory.
-
-**Manual installation:**
+This package requires the `typst` binary. Run the `Typst Tools: Install Typst` command to download the latest Typst release from GitHub into the package's `bin/` directory, or install it manually:
 
 - **Windows**: `winget install --id Typst.Typst` or download from [typst/typst releases](https://github.com/typst/typst/releases)
 - **macOS**: `brew install typst`
 - **Linux**: `cargo install typst-cli` or download from [typst/typst releases](https://github.com/typst/typst/releases)
 
-After installation, verify that `typst` is available:
-
-```bash
-typst --version
-```
-
 If `typst` is not in your PATH, set the full path in the package settings under **Path to Typst**.
+
+The status bar item shows the build state of the active file with a live timer (`Typ` idle, `Typ*` compile-on-save enabled). Left click compiles, alt-left click toggles compile-on-save, middle click splits PDF and Typst source, and right click interrupts the build and clears the linter. The item stays visible while viewing the output PDF, and opening a PDF during a build waits for completion before showing the updated file. Each file tracks its own build state independently, so several documents can compile at the same time.
 
 ## Commands
 
@@ -50,104 +40,26 @@ Commands available in `atom-text-editor[data-grammar~="typst"]`:
 - `typst-tools:interrupt`: stop the current build process for the active file,
 - `typst-tools:interrupt-all`: stop all running build processes,
 - `typst-tools:clean-linter`: clear all linter messages,
-- `typst-tools:open-pdf`: open the generated PDF in Pulsar,
+- `typst-tools:open-pdf`: open the generated PDF in Lumine,
 - `typst-tools:list-fonts`: list all fonts available to Typst.
 
-## Status bar
+## Customization
 
-The status bar item shows the current build state with a live timer:
+The status-bar item can be restyled from your `styles.less`, e.g.:
 
-- **Typ**: idle, click to compile
-- **Typ\***: compile-on-save is enabled
-
-**Mouse interactions:**
-
-| Action | Effect |
-| --- | --- |
-| Left click | Compile |
-| Alt + Left click | Toggle compile-on-save |
-| Middle click | Split PDF / Typst source |
-| Right click | Interrupt build and clear linter |
-
-## Integration with pdf-viewer
-
-This package works seamlessly with the [pdf-viewer](https://github.com/asiloisad/pulsar-pdf-viewer) package:
-
-- **Status bar**: The Typst status bar remains visible when viewing PDFs, allowing you to compile, open PDF, or interrupt builds directly from the PDF viewer.
-- **Build waiting**: If you open a PDF while a build is in progress, the package will wait for completion and automatically open the updated PDF.
-
-## Multiple simultaneous builds
-
-The package supports compiling multiple Typst files simultaneously. Each file tracks its own build state independently, allowing you to start a compilation in one file while another is still building. The status bar updates to show the build state of the currently active file.
-
-## Provided Service `typst-tools`
-
-Allows other packages to integrate with Typst compilation. Subscribe to build events, query build status, and control compilation.
-
-In your `package.json`:
-
-```json
-{
-  "consumedServices": {
-    "typst-tools": {
-      "versions": {
-        "1.0.0": "consumeTypstTools"
-      }
-    }
+```less
+.typst-tools-status {
+  &.status-building {
+    color: var(--text-color-info);
   }
 }
 ```
 
-In your main module:
+## Services
 
-```javascript
-consumeTypstTools(service) {
-  // Subscribe to build events
-  this.subscriptions.add(
-    service.onDidStartBuild(({ file }) => {
-      console.log(`Build started: ${file}`);
-    }),
-    service.onDidFinishBuild(({ file, output }) => {
-      console.log(`Build finished: ${file}`);
-    }),
-    service.onDidFailBuild(({ file, error, output }) => {
-      console.log(`Build failed: ${file}`, error);
-    }),
-    service.onDidChangeBuildStatus(({ status, file, error }) => {
-      console.log(`Build status changed: ${status}`);
-    })
-  );
-
-  // Get current status for a specific file
-  const { status, file } = service.getStatus(filePath);
-
-  // Check if a specific file is currently building
-  const building = service.isBuilding(filePath);
-}
-```
-
-### Methods
-
-| Method | Description |
-| --- | --- |
-| `onDidStartBuild(callback)` | Called when a build starts. Callback receives `{ file }`. |
-| `onDidFinishBuild(callback)` | Called when a build succeeds. Callback receives `{ file, output }`. |
-| `onDidFailBuild(callback)` | Called when a build fails. Callback receives `{ file, error, output }`. |
-| `onDidChangeBuildStatus(callback)` | Called on any status change. Callback receives `{ status, file, error? }`. |
-| `getStatus(filePath?)` | Returns status for a specific file or all builds if no path provided. |
-| `isBuilding(filePath)` | Returns `true` if the specified file is currently being compiled. |
-| `compile(filePath)` | Trigger compilation for the given file. |
-| `interrupt(filePath)` | Interrupt the build for the given file. |
-| `interruptAll()` | Interrupt all running builds. |
-| `toggleCompileOnSave()` | Toggle compile-on-save mode for the active editor. |
-| `isCompileOnSaveEnabled(filePath)` | Returns `true` if compile-on-save is active for the file. |
-
-### Status values
-
-- `'idle'`: No build in progress
-- `'building'`: Build is currently running
-- `'success'`: Last build completed successfully
-- `'error'`: Last build failed
+- **typst-tools** (`1.0.0`): provided to let other packages drive Typst compilation — subscribe to build events (`onDidStartBuild`, `onDidFinishBuild`, `onDidFailBuild`, `onDidChangeBuildStatus`), query status (`getStatus`, `isBuilding`), and control builds (`compile`, `interrupt`, `interruptAll`, `toggleCompileOnSave`).
+- **status-bar** (`^1.0.0`): consumed to show the build state and timer in the status bar.
+- **linter-indie** (`2.0.0`): consumed to report Typst errors and warnings in the linter panel.
 
 ## Contributing
 

@@ -1,8 +1,11 @@
 {
   "name": "typst-tools",
-  "main": "./lib/main",
-  "version": "1.0.3",
+  "author": "lumine-code",
   "description": "Compile Typst documents with build tools, compile-on-save, and PDF viewer integration",
+  "repository": "https://github.com/lumine-code/typst-tools",
+  "bugs": {
+    "url": "https://github.com/lumine-code/typst-tools/issues"
+  },
   "keywords": [
     "typst",
     "typ",
@@ -11,10 +14,17 @@
     "compile",
     "watch"
   ],
-  "repository": "https://github.com/asiloisad/pulsar-typst-tools",
+  "version": "2.0.0",
   "license": "MIT",
   "engines": {
     "atom": ">=1.100.0 <2.0.0"
+  },
+  "main": "./lib/main",
+  "scripts": {
+    "test": "cd ../lumine && npm run test:only -- ../typst-tools/spec",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "providedServices": {
     "typst-tools": {
@@ -37,18 +47,15 @@
   },
   "configSchema": {
     "typstPath": {
-      "order": 1,
       "title": "Path to Typst",
       "description": "Path to the typst executable. Leave as 'typst' to use bundled or PATH binary.",
       "type": "string",
       "default": "typst"
     },
     "outputFormat": {
-      "order": 2,
       "title": "Output Format",
       "description": "The output format for compilation.",
       "type": "string",
-      "default": "pdf",
       "enum": [
         {
           "value": "pdf",
@@ -62,34 +69,40 @@
           "value": "svg",
           "description": "SVG - Scalable Vector Graphics"
         }
-      ]
+      ],
+      "default": "pdf"
     },
     "fontPaths": {
-      "order": 3,
       "title": "Additional Font Paths",
       "description": "Additional directories to search for fonts.",
       "type": "array",
-      "default": [],
       "items": {
         "type": "string"
-      }
+      },
+      "default": []
     },
     "additionalArgs": {
-      "order": 4,
       "title": "Additional Arguments",
       "description": "Additional command-line arguments passed to typst compile/watch.",
       "type": "array",
-      "default": [],
       "items": {
         "type": "string"
-      }
+      },
+      "default": []
     },
     "debug": {
-      "order": 99,
       "title": "Debug Mode",
       "description": "Log debug info to developer console (View > Developer > Toggle Developer Tools).",
       "type": "boolean",
       "default": false
     }
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^18.2.2",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.6"
   }
 }

@@ -1,0 +1,58 @@
+/*
+ * Lumine exposes the editor UI theme variables as CSS custom properties
+ * (e.g. --text-color-error), so the old ui-variables Less import and its
+ * @-prefixed variable references become var(--*).
+ */
+
+.typst-tools-status {
+  padding: 0 0.5em;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  cursor: default;
+
+  &:hover {
+    background-color: var(--background-color-highlight);
+    opacity: 0.8;
+  }
+
+  &:active {
+    opacity: 0.6;
+  }
+
+  .typst-tools-status-label {
+    font-weight: 500;
+
+    &.building-animation {
+      animation: typst-pulse 1s ease-in-out infinite;
+    }
+  }
+
+  .typst-tools-status-timer {
+    opacity: 0.8;
+  }
+
+  &.status-idle,
+  &.status-building {
+    color: var(--text-color);
+  }
+
+  &.status-success {
+    color: var(--text-color-success);
+  }
+
+  &.status-error {
+    color: var(--text-color-error);
+  }
+}
+
+@keyframes typst-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}

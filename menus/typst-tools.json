@@ -1,0 +1,25 @@
+{
+  "menu": [
+    {
+      "label": "Packages",
+      "submenu": [
+        {
+          "label": "Typst Tools",
+          "submenu": [
+            { "label": "Compile", "command": "typst-tools:compile" },
+            { "label": "Compile on Save", "command": "typst-tools:watch" },
+            { "label": "Open PDF", "command": "typst-tools:open-pdf" },
+            { "type": "separator" },
+            { "label": "Interrupt", "command": "typst-tools:interrupt" },
+            { "label": "Interrupt All", "command": "typst-tools:interrupt-all" },
+            { "type": "separator" },
+            { "label": "Clear Linter", "command": "typst-tools:clean-linter" },
+            { "label": "List Fonts", "command": "typst-tools:list-fonts" },
+            { "type": "separator" },
+            { "label": "Install Typst", "command": "typst-tools:install-typst" }
+          ]
+        }
+      ]
+    }
+  ]
+}
