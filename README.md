@@ -59,7 +59,7 @@ The status-bar item can be restyled from your `styles.less`, e.g.:
 
 - **typst-tools** (`1.0.0`): provided to let other packages drive Typst compilation — subscribe to build events (`onDidStartBuild`, `onDidFinishBuild`, `onDidFailBuild`, `onDidChangeBuildStatus`), query status (`getStatus`, `isBuilding`), and control builds (`compile`, `interrupt`, `interruptAll`, `toggleCompileOnSave`).
 - **status-bar** (`^1.0.0`): consumed to show the build state and timer in the status bar.
-- **linter-indie** (`2.0.0`): consumed to report Typst errors and warnings in the linter panel.
+- **linter-indie** (`^1.0.0`): consumed to report Typst errors and warnings in the linter panel.
 
 ## Contributing
 
