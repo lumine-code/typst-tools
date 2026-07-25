@@ -1,7 +1,7 @@
 {
   "name": "typst-tools",
   "author": "lumine-code",
-  "description": "Compile Typst documents with build tools, compile-on-save, and PDF viewer integration",
+  "description": "Compile Typst documents with the typst CLI and view PDFs.",
   "repository": "https://github.com/lumine-code/typst-tools",
   "bugs": {
     "url": "https://github.com/lumine-code/typst-tools/issues"

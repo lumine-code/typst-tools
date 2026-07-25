@@ -1,6 +1,8 @@
 # typst-tools
 
-Compile Typst documents with build tools, compile-on-save, and PDF viewer integration. Includes linter diagnostics, multiple simultaneous builds, and a built-in Typst installer.
+Compile Typst documents with the typst CLI and view PDFs.
+
+Includes linter diagnostics, multiple simultaneous builds, and a built-in Typst installer.
 
 ## Features
 
