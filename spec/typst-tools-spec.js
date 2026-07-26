@@ -243,7 +243,7 @@ describe("typst-tools", () => {
   });
 
   describe("linter integration", () => {
-    it("registers an indie linter through the linter-indie service", () => {
+    it("registers an indie linter through the linter.registry service", () => {
       const registered = [];
       const indie = {
         name: "Typst",
