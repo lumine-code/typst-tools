@@ -10,7 +10,7 @@ Includes linter diagnostics, multiple simultaneous builds, and a built-in Typst 
 - **Compile-on-save**: automatically recompile observed files in the background, even after their editor is closed.
 - **Observed files**: track every file watched for compile-on-save from a searchable list and a status-bar counter.
 - **PDF viewing**: open output PDFs internally via [pdf-view](https://github.com/lumine-code/pdf-view).
-- **Linter integration**: error and warning reporting via `linter-indie` with clickable references to source locations.
+- **Linter integration**: error and warning reporting via `linter.registry` with clickable references to source locations.
 - **Multiple builds**: compile multiple files simultaneously with independent build states.
 - **Built-in installer**: download the Typst binary directly from GitHub releases.
 
@@ -66,7 +66,7 @@ The status-bar item can be restyled from your `styles.less`, e.g.:
 
 - **typst-tools** (`1.0.0`): provided to let other packages drive Typst compilation — subscribe to build events (`onDidStartBuild`, `onDidFinishBuild`, `onDidFailBuild`, `onDidChangeBuildStatus`), query status (`getStatus`, `isBuilding`), and control builds (`compile`, `interrupt`, `interruptAll`, `toggleCompileOnSave`).
 - **status-bar** (`^1.0.0`): consumed to show the build state and timer, and the observed-file count, in the status bar.
-- **linter-indie** (`^1.0.0`): consumed to report Typst errors and warnings in the linter panel.
+- **linter.registry** (`^1.0.0`): consumed to report Typst errors and warnings in the linter panel.
 
 ## Contributing
 

@@ -251,7 +251,7 @@ describe("typst-tools", () => {
         clearMessages() {},
         dispose() {},
       };
-      mainModule.consumeIndie((options) => {
+      mainModule.consumeLinterRegistry((options) => {
         registered.push(options);
         return indie;
       });
