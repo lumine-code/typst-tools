@@ -65,8 +65,8 @@ The status-bar item can be restyled from your `styles.less`, e.g.:
 ## Services
 
 - **[typst-tools](docs/typst-tools.md)** (`1.0.0`): provided to let other packages drive Typst compilation — subscribe to build events (`onDidStartBuild`, `onDidFinishBuild`, `onDidFailBuild`, `onDidChangeBuildStatus`), query status (`getStatus`, `isBuilding`), and control builds (`compile`, `interrupt`, `interruptAll`, `toggleCompileOnSave`).
-- **[status-bar](https://lumine-code.github.io/docs.html#services/status-bar)** (`^1.0.0`): consumed to show the build state and timer, and the observed-file count, in the status bar.
-- **[linter.registry](https://lumine-code.github.io/docs.html#services/linter.registry)** (`^1.0.0`): consumed to report Typst errors and warnings in the linter panel.
+- **status-bar** (`^1.0.0`): consumed to show the build state and timer, and the observed-file count, in the status bar.
+- **linter.registry** (`^1.0.0`): consumed to report Typst errors and warnings in the linter panel.
 
 ## Contributing
 

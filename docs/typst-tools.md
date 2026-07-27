@@ -9,7 +9,7 @@ Drives Typst compilation from another package: start and interrupt builds, read 
 | Consumed by | `consumeTypstTools(typstTools)`                             |
 | Owner       | [`typst-tools`](https://github.com/lumine-code/typst-tools) |
 
-Consumed by `pdf-view`, to keep the rendered PDF in step with the source. Deliberately parallel to [`latex-tools`](https://lumine-code.github.io/docs.html#services/latex-tools) so a consumer can treat the two almost interchangeably — see Behavior for where they differ.
+Consumed by `pdf-view`, to keep the rendered PDF in step with the source. Deliberately parallel to `latex-tools` so a consumer can treat the two almost interchangeably — see Behavior for where they differ.
 
 ## Registration
 
