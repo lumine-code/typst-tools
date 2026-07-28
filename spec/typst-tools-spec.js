@@ -369,7 +369,7 @@ describe("typst-tools", () => {
   });
 
   describe("observed files list", () => {
-    let dir;
+    let dir, previousProjectPaths;
 
     function observe(name) {
       const file = path.join(dir, name);
@@ -388,6 +388,10 @@ describe("typst-tools", () => {
       // rather than whatever the harness happens to have open. `realpath`
       // because Windows hands out 8.3 temp paths that would not relativize.
       dir = fs.realpathSync.native(makeTempDir());
+      // The harness builds one atom environment for the whole run, so the root
+      // has to go back afterwards: the outer afterEach deletes this directory
+      // and every later spec would be left with a project pointing at it.
+      previousProjectPaths = atom.project.getPaths();
       atom.project.setPaths([dir]);
     });
 
@@ -395,6 +399,7 @@ describe("typst-tools", () => {
       const session = activeSession();
       if (session) session.cancel("api");
       mainModule.clearCompileOnSaveFiles();
+      atom.project.setPaths(previousProjectPaths);
     });
 
     it("lists every observed file with its output path", async () => {
