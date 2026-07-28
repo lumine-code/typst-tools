@@ -2,6 +2,19 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 
+// The shared modal vocabulary lives in the editor checkout, which sits at a
+// different relative depth in CI than it does in the workspace, so it is
+// resolved through the resource path rather than by counting `..`.
+const {
+  activeSession,
+  modalElement,
+  visibleLabels,
+  visibleItems,
+  dispatch,
+  confirm,
+  settle,
+} = require(path.join(atom.getLoadSettings().resourcePath, "spec", "helpers", "modal-helpers"));
+
 describe("typst-tools", () => {
   let workspaceElement, mainModule, tempDirs;
 
@@ -352,6 +365,108 @@ describe("typst-tools", () => {
       const file = path.join(os.tmpdir(), "doc.txt");
       expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(false);
       expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(false);
+    });
+  });
+
+  describe("observed files list", () => {
+    let dir;
+
+    function observe(name) {
+      const file = path.join(dir, name);
+      fs.writeFileSync(file, "#set page(width: 10cm)");
+      mainModule.setCompileOnSaveForFile(file, true);
+      return path.resolve(file);
+    }
+
+    async function openList() {
+      mainModule.showObservedFiles();
+      await settle();
+    }
+
+    beforeEach(() => {
+      // Rows read project-relative, so the list needs a known project root
+      // rather than whatever the harness happens to have open. `realpath`
+      // because Windows hands out 8.3 temp paths that would not relativize.
+      dir = fs.realpathSync.native(makeTempDir());
+      atom.project.setPaths([dir]);
+    });
+
+    afterEach(() => {
+      const session = activeSession();
+      if (session) session.cancel("api");
+      mainModule.clearCompileOnSaveFiles();
+    });
+
+    it("lists every observed file with its output path", async () => {
+      observe("a.typ");
+      observe("b.typ");
+      await openList();
+
+      expect(modalElement().dataset.modalView).toBe("typst-tools.observed-files");
+      expect(visibleLabels()).toEqual(["a.typ", "b.typ"]);
+      const details = Array.from(modalElement().querySelectorAll(".secondary-line")).map(
+        (line) => line.textContent,
+      );
+      expect(details).toEqual(["Output: a.pdf", "Output: b.pdf"]);
+    });
+
+    it("opens the focused file on confirm", async () => {
+      const files = [observe("a.typ"), observe("b.typ")];
+      spyOn(atom.workspace, "open").and.callFake(() => Promise.resolve());
+      await openList();
+
+      confirm();
+      await settle();
+
+      expect(atom.workspace.open).toHaveBeenCalledWith(files[0], { searchAllPanes: true });
+      expect(activeSession()).toBe(null);
+    });
+
+    it("binds ctrl-d to the unobserve action while the list is open", async () => {
+      observe("a.typ");
+      await openList();
+
+      const keystrokes = atom.keymaps
+        .findKeyBindings({ command: "modals:unobserve-file", target: modalElement() })
+        .map((binding) => binding.keystrokes);
+      expect(keystrokes).toContain("ctrl-d");
+    });
+
+    it("stops observing the focused file and stays open", async () => {
+      const files = [observe("a.typ"), observe("b.typ")];
+      await openList();
+
+      dispatch("modals:unobserve-file");
+      await settle();
+
+      expect(mainModule.isCompileOnSaveEnabledForFile(files[0])).toBe(false);
+      expect(mainModule.getCompileOnSaveFiles()).toEqual([files[1]]);
+      expect(activeSession()).not.toBe(null);
+      expect(visibleLabels()).toEqual(["b.typ"]);
+    });
+
+    it("closes once the last observed file is unobserved", async () => {
+      observe("a.typ");
+      await openList();
+
+      dispatch("modals:unobserve-file");
+      await settle();
+
+      expect(mainModule.getCompileOnSaveFiles()).toEqual([]);
+      expect(activeSession()).toBe(null);
+    });
+
+    it("re-reads an open list when every file is cleared at once", async () => {
+      observe("a.typ");
+      observe("b.typ");
+      await openList();
+      expect(visibleItems().length).toBe(2);
+
+      mainModule.clearCompileOnSaveFiles();
+      await settle();
+
+      expect(activeSession()).not.toBe(null);
+      expect(visibleItems()).toEqual([]);
     });
   });
 

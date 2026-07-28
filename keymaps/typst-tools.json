@@ -6,8 +6,5 @@
     "f6": "typst-tools:clean-linter",
     "ctrl-f6": "typst-tools:interrupt-all",
     "f7": "typst-tools:open-pdf"
-  },
-  ".typst-tools-observed-files-list": {
-    "ctrl-d": "typst-tools:unobserve-selected-file"
   }
 }
