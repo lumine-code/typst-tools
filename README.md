@@ -52,9 +52,9 @@ Commands available in `atom-text-editor[data-grammar~="typst"]`:
 
 ## Customization
 
-The status-bar item can be restyled from your `styles.less`, e.g.:
+The status-bar item can be restyled from your `styles.css`, e.g.:
 
-```less
+```css
 .typst-tools-status {
   &.status-building {
     color: var(--text-color-info);
