@@ -34,13 +34,13 @@ Compile-on-save is tracked per file path rather than per editor, so a file keeps
 
 ## Commands
 
-Commands available in `atom-workspace`:
+Commands available in `lumine-workspace`:
 
 - `typst-tools:install-typst`: download and install the Typst binary from GitHub releases,
 - `typst-tools:observed-files`: list the files observed for compile-on-save,
 - `typst-tools:clear-all-observed-files`: stop observing every file at once.
 
-Commands available in `atom-text-editor[data-grammar~="typst"]`:
+Commands available in `lumine-text-editor[data-grammar~="typst"]`:
 
 - `typst-tools:compile`: compile the current Typst document,
 - `typst-tools:watch`: toggle compile-on-save mode for the current file,

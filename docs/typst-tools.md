@@ -62,7 +62,7 @@ type TypstTools = {
 ## Minimal example
 
 ```js
-const { CompositeDisposable, Disposable } = require("atom");
+const { CompositeDisposable, Disposable } = require("lumine");
 
 module.exports = {
   consumeTypstTools(typstTools) {

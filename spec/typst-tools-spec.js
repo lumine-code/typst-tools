@@ -13,9 +13,9 @@ describe("typst-tools", () => {
 
   beforeEach(async () => {
     tempDirs = [];
-    workspaceElement = atom.views.getView(atom.workspace);
+    workspaceElement = lumine.views.getView(lumine.workspace);
     jasmine.attachToDOM(workspaceElement);
-    const pack = await atom.packages.activatePackage("typst-tools");
+    const pack = await lumine.packages.activatePackage("typst-tools");
     mainModule = pack.mainModule;
   });
 
@@ -33,7 +33,7 @@ describe("typst-tools", () => {
 
   describe("command registration", () => {
     it("registers the installer and observed-file commands on the workspace", () => {
-      const commands = atom.commands
+      const commands = lumine.commands
         .findCommands({ target: workspaceElement })
         .map((command) => command.name);
       for (const name of [
@@ -46,10 +46,10 @@ describe("typst-tools", () => {
     });
 
     it("registers the build commands on typst editors", async () => {
-      const editor = await atom.workspace.open();
-      const editorElement = atom.views.getView(editor);
+      const editor = await lumine.workspace.open();
+      const editorElement = lumine.views.getView(editor);
       editorElement.dataset.grammar = "text typst";
-      const commands = atom.commands
+      const commands = lumine.commands
         .findCommands({ target: editorElement })
         .map((command) => command.name);
       for (const name of [
@@ -321,7 +321,7 @@ describe("typst-tools", () => {
       const file = path.join(dir, "doc.typ");
       fs.writeFileSync(file, "#set page(width: 10cm)");
 
-      const editor = await atom.workspace.open(file);
+      const editor = await lumine.workspace.open(file);
       expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(true);
       expect(mainModule.isCompileOnSaveEnabled(editor)).toBe(true);
 
