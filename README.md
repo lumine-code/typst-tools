@@ -16,7 +16,7 @@ Includes linter diagnostics, multiple simultaneous builds, and a built-in Typst 
 
 ## Installation
 
-To install `typst-tools` search for _typst-tools_ in the Install pane of the Lumine settings or run `lumine --install lumine-code/typst-tools`.
+To install `typst-tools` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/typst-tools`.
 
 ## Usage
 
@@ -64,9 +64,9 @@ The status-bar item can be restyled from your `styles.css`, e.g.:
 
 ## Services
 
-- **[typst-tools](docs/typst-tools.md)** (`1.0.0`): provided to let other packages drive Typst compilation — subscribe to build events (`onDidStartBuild`, `onDidFinishBuild`, `onDidFailBuild`, `onDidChangeBuildStatus`), query status (`getStatus`, `isBuilding`), and control builds (`compile`, `interrupt`, `interruptAll`, `toggleCompileOnSave`).
-- **status-bar** (`^1.0.0`): consumed to show the build state and timer, and the observed-file count, in the status bar.
-- **linter.registry** (`^1.0.0`): consumed to report Typst errors and warnings in the linter panel.
+- [`typst-tools`](docs/typst-tools.md): provided to let other packages drive Typst compilation — subscribe to build events (`onDidStartBuild`, `onDidFinishBuild`, `onDidFailBuild`, `onDidChangeBuildStatus`), query status (`getStatus`, `isBuilding`), and control builds (`compile`, `interrupt`, `interruptAll`, `toggleCompileOnSave`).
+- `status-bar`: consumed to show the build state and timer, and the observed-file count, in the status bar.
+- `linter.registry`: consumed to report Typst errors and warnings in the linter panel.
 
 ## Contributing
 
