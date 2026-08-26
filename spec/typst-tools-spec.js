@@ -66,6 +66,60 @@ describe("typst-tools", () => {
     });
   });
 
+  describe("status-bar compilation", () => {
+    it("compiles an existing source without an open editor", async () => {
+      const directory = makeTempDir();
+      const typFile = path.join(directory, "document.typ");
+      const pdfFile = path.join(directory, "document.pdf");
+      fs.writeFileSync(typFile, "content");
+      mainModule.currentTypFile = typFile;
+      spyOn(lumine.workspace.getCenter(), "getActivePaneItem").and.returnValue({
+        filePath: pdfFile,
+      });
+      spyOn(lumine.workspace, "getTextEditors").and.returnValue([]);
+      spyOn(mainModule, "runCompilation");
+
+      await mainModule.compileFromStatusBar();
+
+      expect(mainModule.runCompilation).toHaveBeenCalledWith(typFile);
+    });
+
+    it("recreates a removed Typst source before compiling it", async () => {
+      const directory = makeTempDir();
+      const typFile = path.join(directory, "document.typ");
+      const pdfFile = path.join(directory, "document.pdf");
+      mainModule.currentTypFile = typFile;
+      spyOn(lumine.workspace.getCenter(), "getActivePaneItem").and.returnValue({
+        filePath: pdfFile,
+      });
+
+      let finishSave;
+      const editor = {
+        getPath: () => typFile,
+        getFileState: () => lumine.FileState.REMOVED,
+        save: jasmine.createSpy("save").and.callFake(
+          () =>
+            new Promise((resolve) => {
+              finishSave = () => {
+                fs.writeFileSync(typFile, "content");
+                resolve();
+              };
+            }),
+        ),
+      };
+      spyOn(lumine.workspace, "getTextEditors").and.returnValue([editor]);
+      spyOn(mainModule, "runCompilation");
+
+      const compiling = mainModule.compileFromStatusBar();
+      expect(editor.save).toHaveBeenCalled();
+      expect(mainModule.runCompilation).not.toHaveBeenCalled();
+
+      finishSave();
+      await compiling;
+      expect(mainModule.runCompilation).toHaveBeenCalledWith(typFile);
+    });
+  });
+
   describe("provided typst-tools service", () => {
     let service;
 
