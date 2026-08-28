@@ -50,6 +50,12 @@ Commands available in `lumine-text-editor[data-grammar~="typst"]`:
 - `typst-tools:open-pdf`: open the generated PDF in Lumine,
 - `typst-tools:list-fonts`: list all fonts available to Typst.
 
+Actions shown for `.typst-tools-observed-files-list`:
+
+- `typst-tools:open-selected-file`: open the selected observed file,
+- `typst-tools:unobserve-selected-file`: stop observing the selected file,
+- `typst-tools:clear-all-observed-files`: stop observing every file at once.
+
 ## Customization
 
 The status-bar item can be restyled from your `styles.css`, e.g.:
