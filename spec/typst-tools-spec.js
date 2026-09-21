@@ -303,12 +303,17 @@ describe("typst-tools", () => {
         clearMessages() {},
         dispose() {},
       };
-      mainModule.consumeLinterRegistry((options) => {
+      const registration = mainModule.consumeLinterRegistry((options) => {
         registered.push(options);
         return indie;
       });
       expect(registered).toEqual([{ name: "Typst" }]);
       expect(mainModule.linterProvider.indieInstance).toBe(indie);
+
+      spyOn(indie, "dispose");
+      registration.dispose();
+      expect(indie.dispose).toHaveBeenCalled();
+      expect(mainModule.linterProvider.indieInstance).toBeNull();
     });
 
     it("converts and deduplicates messages for the linter", () => {
@@ -411,20 +416,26 @@ describe("typst-tools", () => {
     it("adds left and right tiles through the status-bar service", () => {
       const left = [];
       const right = [];
-      mainModule.consumeStatusBar({
+      const leftTile = { destroy: jasmine.createSpy("destroy left tile") };
+      const rightTile = { destroy: jasmine.createSpy("destroy right tile") };
+      const registration = mainModule.consumeStatusBar({
         addLeftTile(tile) {
           left.push(tile);
-          return { destroy() {} };
+          return leftTile;
         },
         addRightTile(tile) {
           right.push(tile);
-          return { destroy() {} };
+          return rightTile;
         },
       });
       expect(left.length).toBe(1);
       expect(left[0].item.classList.contains("typst-tools-status")).toBe(true);
       expect(right.length).toBe(1);
       expect(right[0].item.classList.contains("typst-tools-observed-status")).toBe(true);
+
+      registration.dispose();
+      expect(leftTile.destroy).toHaveBeenCalled();
+      expect(rightTile.destroy).toHaveBeenCalled();
     });
 
     it("reflects build status through element classes", () => {
