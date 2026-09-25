@@ -458,6 +458,32 @@ describe("typst-tools", () => {
       view.setCompileOnSave(false);
       expect(view.label.textContent).toBe("Typ");
     });
+
+    it("does not let a late build update restore the tile over another center item", async () => {
+      const directory = makeTempDir();
+      const typFile = path.join(directory, "document.typ");
+      fs.writeFileSync(typFile, "content");
+      const editor = await lumine.workspace.open(typFile);
+      const pane = lumine.workspace.getCenter().getActivePane();
+
+      expect(mainModule.currentTypFile).toBe(typFile);
+      expect(mainModule.statusBarView.element.style.display).toBe("");
+
+      const otherItem = document.createElement("div");
+      pane.addItem(otherItem);
+      pane.activateItem(otherItem);
+
+      expect(mainModule.currentTypFile).toBeNull();
+      expect(mainModule.statusBarView.element.style.display).toBe("none");
+
+      if (mainModule.isStatusBarActiveFor(typFile)) {
+        mainModule.statusBarView.setStatus("success");
+      }
+      expect(mainModule.statusBarView.element.style.display).toBe("none");
+
+      pane.activateItem(editor);
+      await pane.destroyItem(otherItem);
+    });
   });
 
   describe("typst installer", () => {
