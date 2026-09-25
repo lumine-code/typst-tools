@@ -18,9 +18,6 @@
   "engines": {
     "lumine": "^1.0.0"
   },
-  "backgroundTips": [
-    "You can compile the Typst document you are editing with {{ 'typst-tools:compile' | keystroke }}"
-  ],
   "main": "./lib/main",
   "files": [
     "bin",
@@ -41,6 +38,11 @@
     "typst-tools": {
       "versions": {
         "1.0.0": "provideTypstTools"
+      }
+    },
+    "background-tips.provider": {
+      "versions": {
+        "1.0.0": "provideBackgroundTips"
       }
     }
   },
