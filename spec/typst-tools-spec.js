@@ -17,6 +17,7 @@ describe("typst-tools", () => {
     jasmine.attachToDOM(workspaceElement);
     const pack = await lumine.packages.activatePackage("typst-tools");
     mainModule = pack.mainModule;
+    mainModule.ensureStatusBarViews();
   });
 
   afterEach(async () => {
@@ -28,6 +29,27 @@ describe("typst-tools", () => {
   });
 
   describe("command registration", () => {
+    it("keeps the observed-files picker lazy", () => {
+      expect(mainModule.observedFilesList).toBeNull();
+
+      const list = mainModule.ensureObservedFilesList();
+      expect(list).toBe(mainModule.observedFilesList);
+      expect(mainModule.ensureObservedFilesList()).toBe(list);
+    });
+
+    it("recreates lazy UI after a deactivate/reactivate lifecycle", async () => {
+      const firstList = mainModule.ensureObservedFilesList();
+      spyOn(firstList, "destroy").and.callThrough();
+
+      await lumine.packages.deactivatePackage("typst-tools");
+      expect(firstList.destroy).toHaveBeenCalled();
+
+      const pack = await lumine.packages.activatePackage("typst-tools");
+      mainModule = pack.mainModule;
+      expect(mainModule.observedFilesList).toBeNull();
+      expect(mainModule.ensureObservedFilesList()).not.toBe(firstList);
+    });
+
     it("registers the installer and observed-file commands on the workspace", () => {
       const commands = lumine.commands
         .findCommands({ target: workspaceElement })
@@ -413,7 +435,33 @@ describe("typst-tools", () => {
   });
 
   describe("status bar integration", () => {
-    it("adds left and right tiles through the status-bar service", () => {
+    it("keeps build operations headless before the status bar mounts", () => {
+      const view = mainModule.statusBarView;
+      const filePath = path.join(__dirname, "headless.typ");
+      const process = {};
+      mainModule.statusBarView = null;
+      mainModule.currentTypFile = filePath;
+      mainModule.buildProcesses.set(filePath, { process });
+      spyOn(mainModule, "killProcess");
+      spyOn(lumine.workspace, "getActiveTextEditor").and.returnValue({
+        getPath: () => filePath,
+      });
+
+      try {
+        expect(mainModule.isStatusBarActiveFor(filePath)).toBe(false);
+        expect(mainModule.interruptFile(filePath)).toBe(true);
+        expect(mainModule.killProcess).toHaveBeenCalledWith(process);
+
+        const secondProcess = {};
+        mainModule.buildProcesses.set(filePath, { process: secondProcess });
+        expect(mainModule.interruptAllProcesses()).toBe(1);
+        expect(mainModule.killProcess).toHaveBeenCalledWith(secondProcess);
+      } finally {
+        mainModule.statusBarView = view;
+      }
+    });
+
+    it("adds left and right tiles through the status-bar service", async () => {
       const left = [];
       const right = [];
       const leftTile = { destroy: jasmine.createSpy("destroy left tile") };
@@ -428,6 +476,7 @@ describe("typst-tools", () => {
           return rightTile;
         },
       });
+      await Promise.resolve();
       expect(left.length).toBe(1);
       expect(left[0].item.classList.contains("typst-tools-status")).toBe(true);
       expect(right.length).toBe(1);
@@ -436,6 +485,18 @@ describe("typst-tools", () => {
       registration.dispose();
       expect(leftTile.destroy).toHaveBeenCalled();
       expect(rightTile.destroy).toHaveBeenCalled();
+    });
+
+    it("cancels a deferred tile mount when its service registration is disposed", async () => {
+      const addLeftTile = jasmine.createSpy("addLeftTile");
+      const addRightTile = jasmine.createSpy("addRightTile");
+      const registration = mainModule.consumeStatusBar({ addLeftTile, addRightTile });
+
+      registration.dispose();
+      await Promise.resolve();
+
+      expect(addLeftTile).not.toHaveBeenCalled();
+      expect(addRightTile).not.toHaveBeenCalled();
     });
 
     it("reflects build status through element classes", () => {

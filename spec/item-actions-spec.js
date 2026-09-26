@@ -17,7 +17,7 @@ describe("typst-tools item actions", () => {
   beforeEach(async () => {
     jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
     const pkg = await lumine.packages.activatePackage("typst-tools");
-    list = pkg.mainModule.observedFilesList;
+    list = pkg.mainModule.ensureObservedFilesList();
   });
 
   afterEach(async () => {
