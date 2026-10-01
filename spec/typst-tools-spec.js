@@ -114,7 +114,7 @@ describe("typst-tools", () => {
       let finishSave;
       const editor = {
         getPath: () => typFile,
-        getFileState: () => lumine.FileState.REMOVED,
+        getFileState: () => "removed",
         save: jasmine.createSpy("save").and.callFake(
           () =>
             new Promise((resolve) => {
