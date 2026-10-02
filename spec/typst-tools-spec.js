@@ -3,7 +3,7 @@ const fs = require("fs");
 const os = require("os");
 
 describe("typst-tools", () => {
-  let workspaceElement, mainModule, tempDirs;
+  let workspaceElement, mainModule, tempDirs, editors;
 
   function makeTempDir() {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "typst-tools-spec-"));
@@ -13,6 +13,7 @@ describe("typst-tools", () => {
 
   beforeEach(async () => {
     tempDirs = [];
+    editors = [];
     workspaceElement = lumine.views.getView(lumine.workspace);
     jasmine.attachToDOM(workspaceElement);
     const pack = await lumine.packages.activatePackage("typst-tools");
@@ -22,6 +23,8 @@ describe("typst-tools", () => {
 
   afterEach(async () => {
     mainModule.clearCompileOnSaveFiles();
+    for (const editor of editors) editor.destroy();
+    await lumine.packages.deactivatePackage("typst-tools");
     await lumine.fileWatchClient.settlePendingTeardown();
     for (const dir of tempDirs) {
       fs.rmSync(dir, { recursive: true, force: true });
@@ -65,6 +68,7 @@ describe("typst-tools", () => {
 
     it("registers the build commands on typst editors", async () => {
       const editor = await lumine.workspace.open();
+      editors.push(editor);
       const editorElement = lumine.views.getView(editor);
       editorElement.dataset.grammar = "text typst";
       const commands = lumine.commands
@@ -374,12 +378,14 @@ describe("typst-tools", () => {
   });
 
   describe("compile-on-save observation", () => {
-    it("observes files by path and tracks them in the status view", () => {
+    it("observes files by path and tracks them in the status view", async () => {
       const dir = makeTempDir();
       const file = path.join(dir, "doc.typ");
       fs.writeFileSync(file, "#set page(width: 10cm)");
 
       expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(true);
+      const handle = mainModule.compileOnSaveFiles.get(mainModule.getCompileOnSaveKey(file)).file;
+      await handle.ready;
       expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(true);
       expect(mainModule.getCompileOnSaveFiles()).toEqual([path.resolve(file)]);
       expect(mainModule.observedFilesStatusView.count).toBe(1);
@@ -388,6 +394,8 @@ describe("typst-tools", () => {
       expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(false);
 
       expect(mainModule.setCompileOnSaveForFile(file, false)).toBe(true);
+      await handle.closed;
+      expect(handle.isDisposed).toBe(true);
       expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(false);
       expect(mainModule.getCompileOnSaveFiles()).toEqual([]);
       expect(mainModule.observedFilesStatusView.count).toBe(0);
@@ -399,7 +407,10 @@ describe("typst-tools", () => {
       fs.writeFileSync(file, "#set page(width: 10cm)");
 
       const editor = await lumine.workspace.open(file);
+      editors.push(editor);
       expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(true);
+      const handle = mainModule.compileOnSaveFiles.get(mainModule.getCompileOnSaveKey(file)).file;
+      await handle.ready;
       expect(mainModule.isCompileOnSaveEnabled(editor)).toBe(true);
 
       editor.destroy();
@@ -410,9 +421,10 @@ describe("typst-tools", () => {
       expect(mainModule.observedFilesStatusView.count).toBe(1);
 
       mainModule.setCompileOnSaveForFile(file, false);
+      await handle.closed;
     });
 
-    it("clears every observed file at once", () => {
+    it("clears every observed file at once", async () => {
       const dir = makeTempDir();
       const files = ["a.typ", "b.typ"].map((name) => {
         const file = path.join(dir, name);
@@ -420,9 +432,12 @@ describe("typst-tools", () => {
         mainModule.setCompileOnSaveForFile(file, true);
         return file;
       });
+      const handles = [...mainModule.compileOnSaveFiles.values()].map(({ file }) => file);
+      await Promise.all(handles.map((handle) => handle.ready));
 
       expect(mainModule.getCompileOnSaveFiles().length).toBe(files.length);
       mainModule.clearCompileOnSaveFiles();
+      await Promise.all(handles.map((handle) => handle.closed));
       expect(mainModule.getCompileOnSaveFiles()).toEqual([]);
       expect(mainModule.observedFilesStatusView.count).toBe(0);
     });
@@ -525,6 +540,7 @@ describe("typst-tools", () => {
       const typFile = path.join(directory, "document.typ");
       fs.writeFileSync(typFile, "content");
       const editor = await lumine.workspace.open(typFile);
+      editors.push(editor);
       const pane = lumine.workspace.getCenter().getActivePane();
 
       expect(mainModule.currentTypFile).toBe(typFile);
