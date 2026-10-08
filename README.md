@@ -28,6 +28,8 @@ This package requires the `typst` binary. Run the `Typst Tools: Install Typst` c
 
 If `typst` is not in your PATH, set the full path in the package settings under **Path to Typst**.
 
+Compiler errors and warnings without a source location are attached to the beginning of the main document.
+
 The status bar item shows the build state of the active file with a live timer (`Typ` idle, `Typ*` compile-on-save enabled). Left click compiles, alt-left click toggles compile-on-save, middle click splits PDF and Typst source, and right click interrupts the build and clears the linter. The item stays visible while viewing the output PDF, and opening a PDF during a build waits for completion before showing the updated file. Each file tracks its own build state independently, so several documents can compile at the same time.
 
 Compile-on-save is tracked per file path rather than per editor, so a file keeps recompiling on every change even after you close its tab. A second status-bar item on the right shows how many files are currently observed and is hidden when there are none. Left click it to open the observed-files list, where a file can be opened or dropped from observation; right click clears every observed file at once. Observed files are not remembered between sessions.

@@ -292,7 +292,7 @@ describe("typst-tools", () => {
       const messages = parser.parse("error: something exploded", "/proj/main.typ");
       expect(messages.length).toBe(1);
       expect(messages[0].location.fullPath).toBe("/proj/main.typ");
-      expect(messages[0].location.position.start).toEqual({ row: -1, column: -1 });
+      expect(messages[0].location.position.start).toEqual({ row: 0, column: 0 });
     });
 
     it("returns no messages for empty output", () => {

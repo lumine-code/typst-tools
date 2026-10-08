@@ -19,6 +19,9 @@
     "lumine": "^1.0.0"
   },
   "main": "./lib/main",
+  "specPackages": [
+    "linter"
+  ],
   "files": [
     "bin",
     "docs",
