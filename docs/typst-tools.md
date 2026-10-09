@@ -42,22 +42,23 @@ type TypstTools = {
   isAnyBuilding(): boolean;
   getMessages(filePath?: string): object[];
   getMessageStatistics(filePath?: string): object;
-  getOutputPath(filePath: string): string;
+  getOutputPath(filePath: string): string | null;
   isCompileOnSaveEnabled(editor: TextEditor): boolean;
 
   // Control
-  compile(filePath: string): Promise<void>;
-  interrupt(filePath: string): void;
-  interruptAll(): void;
+  compile(filePath: string): boolean;
+  interrupt(filePath: string): boolean;
+  interruptAll(): number;
   toggleCompileOnSave(): void;
+  openPdf(filePath: string): Promise<boolean>;
 };
 ```
 
-| Group   | Notes                                                                                                    |
-| ------- | -------------------------------------------------------------------------------------------------------- |
-| Events  | All return a `Disposable`. `onDidChangeBuildStatus` is the coarse one for an indicator.                  |
-| Status  | Every reader takes an **optional** `filePath`; omitting it answers for the project rather than one file. |
-| Control | `compile` resolves when the build finishes. `toggleCompileOnSave` flips the setting globally.            |
+| Group   | Notes                                                                                                |
+| ------- | ---------------------------------------------------------------------------------------------------- |
+| Events  | All return a `Disposable`. `onDidChangeBuildStatus` is the coarse one for an indicator.              |
+| Status  | `getStatus()` returns the build inventory. Message readers default to the active Typst editor.       |
+| Control | `compile` returns whether the build started. `toggleCompileOnSave` toggles the active editor's file. |
 
 ## Minimal example
 
@@ -69,8 +70,9 @@ module.exports = {
     this.typst = typstTools;
     const disposables = new CompositeDisposable();
     disposables.add(
-      typstTools.onDidFinishBuild(({ filePath }) => {
-        this.showPdf(typstTools.getOutputPath(filePath));
+      typstTools.onDidFinishBuild(({ file }) => {
+        const output = typstTools.getOutputPath(file);
+        if (output) this.showPdf(output);
       }),
       new Disposable(() => (this.typst = null)),
     );
@@ -81,9 +83,9 @@ module.exports = {
 
 ## Behavior
 
-**Two differences from `latex-tools`, both deliberate.** There is no `resolveRoot`: a Typst document compiles from the file itself, so the path you have is the path to build. And compile-on-save is a global `toggleCompileOnSave()` rather than a per-editor setter — you can read `isCompileOnSaveEnabled(editor)` but not set it for one editor.
+A Typst document compiles from the supplied source path. `compile(filePath)` returns immediately with `true` when the build starts, or `false` when it cannot start; subscribe to build events to learn the result. Compile-on-save is tracked per file. `toggleCompileOnSave()` toggles the active editor's file, and `isCompileOnSaveEnabled(editor)` reads the supplied editor's state.
 
-`getOutputPath` answers from configuration rather than the filesystem, so it is valid before any build has run and does not imply the file exists.
+`getOutputPath` uses the configured output format and returns the output path only when that file exists, or `null` otherwise. `openPdf(filePath)` opens an existing output in the workspace and resolves to whether it succeeded.
 
 `onDidFinishBuild` and `onDidFailBuild` are mutually exclusive per build; `onDidChangeBuildStatus` covers both and the transitions between, which is what an indicator should follow.
 
@@ -101,4 +103,4 @@ Return a `Disposable` that unsubscribes and drops your reference. Do **not** cal
 
 ## Versioning
 
-`1.0.0` provided, `^1.0.0` consumed. A change that breaks this shape gets a new service name rather than a new major version, and both sides move in the same release.
+`1.0.0` provided, `^1.0.0` consumed. Backward-compatible additions stay within version 1; incompatible contract changes require a new major service version.
