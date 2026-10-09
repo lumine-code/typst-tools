@@ -89,6 +89,10 @@ module.exports = {
 
 Diagnostics reach the linter panel on their own, so a consumer does not need to republish `getMessages`.
 
+The diagnostic store holds the most recently completed current build. `getMessages(root)` and `getMessageStatistics(root)` return its diagnostics only for that compilation root; omitting the root resolves the active Typst editor. Diagnostics for imported sources remain part of their owning root's result. A clean build replaces the snapshot with no messages; the service does not keep a build history.
+
+A compile command waiting for a document save stops if its target editor or package retires, while the accepted save still finishes. Running builds are interrupted on deactivation. Old interrupted process callbacks cannot replace a newer build, and a retained service declines new work after its package retires.
+
 `compile` on a file already building is not queued — check `isBuilding(filePath)` first if that matters.
 
 ## Teardown

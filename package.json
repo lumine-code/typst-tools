@@ -20,7 +20,8 @@
   },
   "main": "./lib/main",
   "specPackages": [
-    "linter"
+    "linter",
+    "status-bar"
   ],
   "files": [
     "bin",
