@@ -56,6 +56,7 @@ jobs:
         shell: bash
     env:
       LUMINE_JASMINE_REPORTER: list
+      LUMINE_DISABLE_SHELLING_OUT_FOR_ENVIRONMENT: "true"
       TEMP: ${{ github.workspace }}/typst-spec-tmp
       TMP: ${{ github.workspace }}/typst-spec-tmp
       TMPDIR: ${{ github.workspace }}/typst-spec-tmp
