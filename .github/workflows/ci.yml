@@ -40,6 +40,10 @@ jobs:
         run: npm run lint
       - name: Check formatting
         run: npm run format:check
+      - name: Audit dependencies
+        run: npm audit --audit-level=moderate
+      - name: Check package contents
+        run: npm pack --dry-run
 
   integration:
     # Run the Jasmine spec suite inside a real Lumine build; the specs exercise
@@ -57,6 +61,10 @@ jobs:
     env:
       LUMINE_JASMINE_REPORTER: list
       LUMINE_DISABLE_SHELLING_OUT_FOR_ENVIRONMENT: "true"
+      LUMINE_HOME: ${{ github.workspace }}/typst-spec-home
+      HOME: ${{ github.workspace }}/typst-spec-home
+      USERPROFILE: ${{ github.workspace }}/typst-spec-home
+      XDG_CONFIG_HOME: ${{ github.workspace }}/typst-spec-home
       TEMP: ${{ github.workspace }}/typst-spec-tmp
       TMP: ${{ github.workspace }}/typst-spec-tmp
       TMPDIR: ${{ github.workspace }}/typst-spec-tmp
@@ -68,6 +76,8 @@ jobs:
         with:
           repository: lumine-code/lumine
           path: lumine
+      - name: Create the private home and temporary directory
+        run: mkdir -p "$TEMP" "$LUMINE_HOME/electronUserData"
       - uses: actions/setup-node@v7
         with:
           node-version-file: lumine/.nvmrc
@@ -85,8 +95,6 @@ jobs:
       # no ssh key, so rewrite them to anonymous HTTPS (the forks are public).
       - name: Use HTTPS for GitHub git dependencies
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-      - name: Create the private temporary directory
-        run: mkdir -p "$TEMP"
       - name: Install package dependencies
         working-directory: typst-tools
         run: npm ci --ignore-scripts
@@ -103,7 +111,7 @@ jobs:
         run: npm run build
       - name: Install spec dependency packages
         working-directory: lumine
-        run: node script/install-spec-packages.js --package ../typst-tools --home "$RUNNER_TEMP/lumine-home" --github-env "$GITHUB_ENV"
+        run: node script/install-spec-packages.js --package ../typst-tools --home "$LUMINE_HOME" --github-env "$GITHUB_ENV"
       - name: Run the Jasmine spec suite
         working-directory: lumine
         timeout-minutes: 20
