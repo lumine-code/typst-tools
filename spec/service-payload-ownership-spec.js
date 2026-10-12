@@ -1,3 +1,4 @@
+const windowService = require("./helpers/window-service");
 const path = require("node:path");
 
 describe("Typst actual service payload ownership", () => {
@@ -34,12 +35,18 @@ describe("Typst actual service payload ownership", () => {
     await lumine.fileWatchClient.settlePendingTeardown();
   });
   function consume(service, method) {
-    const lease = hub.consume(service, "^1.0.0", (payload) => main[method](payload));
+    const lease = hub.consume(service, service === "status-bar" ? "^2.0.0" : "^1.0.0", (payload) =>
+      main[method](payload),
+    );
     consumers.push(lease);
     return lease;
   }
   function provide(service, value) {
-    const lease = hub.provide(service, "1.0.0", value);
+    const lease = hub.provide(
+      service,
+      service === "status-bar" ? "2.0.0" : "1.0.0",
+      service === "status-bar" ? windowService(value) : value,
+    );
     providers.push(lease);
     return lease;
   }
@@ -109,7 +116,7 @@ describe("Typst actual service payload ownership", () => {
       main.deactivate();
       return tile;
     });
-    providers.push(main.consumeStatusBar(bars[0]));
+    providers.push(main.consumeStatusBar(windowService(bars[0])));
     expect(() => callback()).not.toThrow();
     expect(tile.destroy).toHaveBeenCalled();
     expect(bars[0].element.querySelectorAll(".typst-tools-status").length).toBe(0);
@@ -129,12 +136,15 @@ describe("Typst actual service payload ownership", () => {
     expect(newer.subscriptions.disposed).toBe(false);
   });
   it("keeps the new Package generation after old manual service leases dispose", async () => {
-    const oldStatus = main.consumeStatusBar(bars[0]);
+    const oldStatus = main.consumeStatusBar(windowService(bars[0]));
     const oldIndie = main.consumeLinterRegistry(registry);
     await drain();
     await lumine.packages.deactivatePackage("typst-tools");
     main = (await lumine.packages.activatePackage("typst-tools")).mainModule;
-    providers.push(main.consumeStatusBar(bars[0]), main.consumeLinterRegistry(registry));
+    providers.push(
+      main.consumeStatusBar(windowService(bars[0])),
+      main.consumeLinterRegistry(registry),
+    );
     const current = main.linterProvider.indieInstance;
     await drain();
     oldStatus.dispose();

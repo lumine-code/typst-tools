@@ -1,3 +1,4 @@
+const windowService = require("./helpers/window-service");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
@@ -481,16 +482,18 @@ describe("typst-tools", () => {
       const right = [];
       const leftTile = { destroy: jasmine.createSpy("destroy left tile") };
       const rightTile = { destroy: jasmine.createSpy("destroy right tile") };
-      const registration = mainModule.consumeStatusBar({
-        addLeftTile(tile) {
-          left.push(tile);
-          return leftTile;
-        },
-        addRightTile(tile) {
-          right.push(tile);
-          return rightTile;
-        },
-      });
+      const registration = mainModule.consumeStatusBar(
+        windowService({
+          addLeftTile(tile) {
+            left.push(tile);
+            return leftTile;
+          },
+          addRightTile(tile) {
+            right.push(tile);
+            return rightTile;
+          },
+        }),
+      );
       await Promise.resolve();
       expect(left.length).toBe(1);
       expect(left[0].item.classList.contains("typst-tools-status")).toBe(true);
@@ -505,7 +508,9 @@ describe("typst-tools", () => {
     it("cancels a deferred tile mount when its service registration is disposed", async () => {
       const addLeftTile = jasmine.createSpy("addLeftTile");
       const addRightTile = jasmine.createSpy("addRightTile");
-      const registration = mainModule.consumeStatusBar({ addLeftTile, addRightTile });
+      const registration = mainModule.consumeStatusBar(
+        windowService({ addLeftTile, addRightTile }),
+      );
 
       registration.dispose();
       await Promise.resolve();
@@ -547,6 +552,7 @@ describe("typst-tools", () => {
       expect(mainModule.statusBarView.element.style.display).toBe("");
 
       const otherItem = document.createElement("div");
+      otherItem.canCopy = () => false;
       pane.addItem(otherItem);
       pane.activateItem(otherItem);
 
