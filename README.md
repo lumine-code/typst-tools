@@ -30,9 +30,9 @@ If `typst` is not in your PATH, set the full path in the package settings under 
 
 Compiler errors and warnings without a source location are attached to the beginning of the main document.
 
-The status bar item shows the build state of the active file with a live timer (`Typ` idle, `Typ*` compile-on-save enabled). Left click compiles, alt-left click toggles compile-on-save, middle click splits PDF and Typst source, and right click interrupts the build and clears the linter. The item stays visible while viewing the output PDF, and opening a PDF during a build waits for completion before showing the updated file. Each file tracks its own build state independently, so several documents can compile at the same time.
+The status bar item shows the build state of the active file with a live timer (`Typ` idle, `Typ*` compile-on-save enabled). Left click compiles, alt-left click toggles compile-on-save, middle click splits PDF and Typst source, and right click opens a menu containing all these actions and Stop and Clear Diagnostics. The item stays visible while viewing the output PDF, and opening a PDF during a build waits for completion before showing the updated file. Each file tracks its own build state independently, so several documents can compile at the same time.
 
-Compile-on-save is tracked per file path rather than per editor, so a file keeps recompiling on every change even after you close its tab. A second status-bar item on the right shows how many files are currently observed and is hidden when there are none. Left click it to open the observed-files list, where a file can be opened or dropped from observation; right click clears every observed file at once. Observed files are not remembered between sessions.
+Compile-on-save is tracked per file path rather than per editor, so a file keeps recompiling on every change even after you close its tab. A second status-bar item on the right shows how many files are currently observed and is hidden when there are none. Left click it to open the observed-files list, where a file can be opened or dropped from observation; right click opens a menu to list files or stop observing them all. Observed files are not remembered between sessions.
 
 ## Commands
 
@@ -47,6 +47,8 @@ Commands available in `lumine-workspace`:
 - `typst-tools:interrupt-all`: stop all running build processes,
 - `typst-tools:clean-linter`: clear all linter messages,
 - `typst-tools:open-pdf`: open the generated PDF in Lumine,
+- `typst-tools:split-pdf-source`: open the PDF or its source in an adjacent pane,
+- `typst-tools:stop-and-clear-diagnostics`: stop this document's build and clear diagnostics,
 - `typst-tools:list-fonts`: list all fonts available to Typst.
 
 Actions shown for `.typst-tools-observed-files-list`:
