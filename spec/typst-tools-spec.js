@@ -7,7 +7,7 @@ describe("typst-tools", () => {
   let workspaceElement, mainModule, tempDirs, editors;
 
   function makeTempDir() {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "typst-tools-spec-"));
+    const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "typst-tools-spec-")));
     tempDirs.push(dir);
     return dir;
   }
@@ -28,7 +28,21 @@ describe("typst-tools", () => {
     await lumine.packages.deactivatePackage("typst-tools");
     await lumine.fileWatchClient.settlePendingTeardown();
     for (const dir of tempDirs) {
-      fs.rmSync(dir, { recursive: true, force: true });
+      const relative = path.relative(fs.realpathSync(os.tmpdir()), dir);
+      if (
+        !relative ||
+        relative.startsWith("..") ||
+        path.isAbsolute(relative) ||
+        !path.basename(dir).startsWith("typst-tools-spec-")
+      ) {
+        throw new Error("Unsafe Typst fixture cleanup");
+      }
+      await fs.promises.rm(dir, {
+        recursive: true,
+        force: true,
+        maxRetries: 10,
+        retryDelay: 100,
+      });
     }
   });
 
