@@ -63,6 +63,44 @@ describe("typst-tools status menus", () => {
     main.observedFilesStatusView.setCount(2);
     expect(counterOptions.title()).toBe("2 observed files. Open the list.");
   });
+  it("shows the package's real editor-scoped shortcuts from the status menu", () => {
+    // Exercise the shipped keymap against its real editor scope without requiring a parser fixture.
+    editor.getElement().setAttribute("data-grammar", "typst");
+    const items = menu(tile.firstChild);
+    expect(items.find((item) => item.command === "typst-tools:compile").keyBindingLabel).toBe("F5");
+    expect(items.find((item) => item.command === "typst-tools:watch").keyBindingLabel).toBe(
+      process.platform === "darwin" ? "\u2325F5" : "Alt+F5",
+    );
+    expect(
+      items.find((item) => item.command === "typst-tools:stop-and-clear-diagnostics")
+        .keyBindingLabel,
+    ).toBeUndefined();
+  });
+  it("keeps shortcut lookup in the tile's window and suppresses it for a PDF", async () => {
+    editor.getElement().setAttribute("data-grammar", "typst");
+    const extra = await lumine.workspace.openEditorWindow({ show: false });
+    const other = lumine.workspace.buildTextEditor();
+    extra.getEditorContainer().getActivePane().activateItem(other, { activatePane: true });
+    expect(lumine.workspace.getActiveTextEditor()).toBe(other);
+    expect(menu().find((item) => item.command === "typst-tools:compile").keyBindingLabel).toBe(
+      "F5",
+    );
+    const element = document.createElement("div");
+    const item = {
+      filePath: editor.getPath().replace(/\.typ$/, ".pdf"),
+      getTitle: () => "PDF",
+      getElement: () => element,
+    };
+    const container = lumine.workspace.getMainWindow().getEditorContainer();
+    container.getActivePane().activateItem(item);
+    const items = menu();
+    for (const command of ["compile", "watch"])
+      expect(items.find((item) => item.command === "typst-tools:" + command).keyBindingLabel).toBe(
+        "",
+      );
+    expect(items.find((item) => item.command === "typst-tools:compile").enabled).toBe(true);
+    await container.getActivePane().destroyItem(item);
+  });
   it("resolves the primary keyboard hint from the tile's current editor", async () => {
     const options = tooltipCalls.calls.all().find((call) => call.args[0] === tile).args[1];
     const other = await lumine.workspace.open();
