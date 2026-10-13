@@ -57,6 +57,8 @@ Actions shown for `.typst-tools-observed-files-list`:
 - `typst-tools:unobserve-selected-file`: stop observing the selected file,
 - `typst-tools:clear-all-observed-files`: stop observing every file at once.
 
+Status tooltips show the current state and primary click action; context menus show mouse shortcuts beside their actions.
+
 ## Customization
 
 The status-bar item can be restyled from your `styles.css`, e.g.:
