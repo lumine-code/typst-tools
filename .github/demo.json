@@ -1,0 +1,17 @@
+{
+  "title": "typst-tools",
+  "description": "Compile a Typst document and inspect the generated PDF beside its source.",
+  "recordedOn": "2026-10-13",
+  "sourceRevision": "b768e13624364348ab2856d08870c1b3ee7dc21b",
+  "mode": "normal",
+  "fontSettings": "default",
+  "themeSourceRevision": "6564a9e21899b5541e9c8f8006f9be6d6d72e6ad",
+  "images": [
+    {
+      "file": "demo.png",
+      "label": "Compile a Typst document and inspect the generated PDF beside its source.",
+      "width": 1250,
+      "height": 760
+    }
+  ]
+}

@@ -14,6 +14,8 @@ Includes linter diagnostics, multiple simultaneous builds, and a built-in Typst 
 - **Multiple builds**: compile multiple files simultaneously with independent build states.
 - **Built-in installer**: download the Typst binary directly from GitHub releases.
 
+![Compile a Typst document and inspect the generated PDF beside its source.](.github/demo.png)
+
 ## Installation
 
 To install `typst-tools` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/typst-tools`.
