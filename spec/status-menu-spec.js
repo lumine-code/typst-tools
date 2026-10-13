@@ -47,14 +47,6 @@ describe("typst-tools status menus", () => {
       true,
     );
     expect(main.runCompilation).not.toHaveBeenCalled();
-    expect(
-      menu()
-        .filter((item) => item.mouseBindingLabel)
-        .map((item) => item.mouseBindingLabel),
-    ).toEqual(["LMB", "Alt+LMB", "MMB"]);
-    expect(
-      menu(counter).find((item) => item.command === "typst-tools:observed-files").mouseBindingLabel,
-    ).toBe("LMB");
     const options = tooltipCalls.calls.all().find((call) => call.args[0] === tile).args[1];
     expect(options.keyBindingCommand).toBe("typst-tools:compile");
     expect(options.keyBindingTarget()).toBe(editor.getElement());

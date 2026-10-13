@@ -40,19 +40,16 @@
       },
       {
         "label": "Compile",
-        "command": "typst-tools:compile",
-        "mouseBindingLabel": "LMB"
+        "command": "typst-tools:compile"
       },
       {
         "label": "Compile on Save",
         "type": "checkbox",
-        "command": "typst-tools:watch",
-        "mouseBindingLabel": "Alt+LMB"
+        "command": "typst-tools:watch"
       },
       {
         "label": "Split PDF and Source",
-        "command": "typst-tools:split-pdf-source",
-        "mouseBindingLabel": "MMB"
+        "command": "typst-tools:split-pdf-source"
       },
       {
         "label": "Stop and Clear Diagnostics",
@@ -68,8 +65,7 @@
       },
       {
         "label": "Observed Files",
-        "command": "typst-tools:observed-files",
-        "mouseBindingLabel": "LMB"
+        "command": "typst-tools:observed-files"
       },
       {
         "label": "Stop Observing All Files",
