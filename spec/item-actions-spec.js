@@ -55,7 +55,6 @@ describe("typst-tools item actions", () => {
     expect(actions.map((action) => action.command)).toEqual([
       "typst-tools:open-selected-file",
       "typst-tools:open-with",
-      "typst-tools:open-pending",
       "typst-tools:open-external",
       "typst-tools:show-in-folder",
       "typst-tools:unobserve-selected-file",
