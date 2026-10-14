@@ -2,3 +2,4 @@ node_modules
 .dev
 package-lock.json
 bin
+demo/
