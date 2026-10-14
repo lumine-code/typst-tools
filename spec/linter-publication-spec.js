@@ -32,10 +32,21 @@ describe("Typst diagnostics through the actual indie linter service", () => {
     if (directory) {
       const resolved = fs.realpathSync.native(directory);
       const relative = path.relative(fs.realpathSync.native(os.tmpdir()), resolved);
-      if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+      if (
+        !relative ||
+        relative === ".." ||
+        relative.startsWith(`..${path.sep}`) ||
+        path.isAbsolute(relative)
+      ) {
         throw new Error("Unsafe Typst fixture cleanup target");
       }
-      fs.rmSync(resolved, { recursive: true, force: true });
+      // Windows can briefly retain delete-pending entries after watcher teardown.
+      await fs.promises.rm(resolved, {
+        recursive: true,
+        force: true,
+        maxRetries: 5,
+        retryDelay: 100,
+      });
     }
   });
 
