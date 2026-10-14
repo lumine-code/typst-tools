@@ -56,6 +56,10 @@ Commands available in `lumine-workspace`:
 Actions shown for `.typst-tools-observed-files-list`:
 
 - `typst-tools:open-selected-file`: open the selected observed file,
+- `typst-tools:open-with`: choose how and where to open the selected observed file,
+- `typst-tools:open-pending`: open the observed file as a temporary text editor tab,
+- `typst-tools:open-external`: open the observed file in the configured external application,
+- `typst-tools:show-in-folder`: reveal the observed file in the system file manager,
 - `typst-tools:unobserve-selected-file`: stop observing the selected file,
 - `typst-tools:clear-all-observed-files`: stop observing every file at once.
 

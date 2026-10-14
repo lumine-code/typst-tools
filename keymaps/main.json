@@ -11,5 +11,11 @@
   },
   ".typst-tools-observed-files-list": {
     "ctrl-d": "typst-tools:unobserve-selected-file"
+  },
+  ".typst-tools-observed-files-list lumine-text-editor[mini]": {
+    "alt-enter": "typst-tools:open-with",
+    "shift-enter": "typst-tools:open-pending",
+    "ctrl-alt-enter": "typst-tools:open-external",
+    "ctrl-shift-enter": "typst-tools:show-in-folder"
   }
 }

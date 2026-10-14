@@ -21,7 +21,9 @@
   "main": "./lib/main",
   "specPackages": [
     "linter",
-    "status-bar"
+    "status-bar",
+    "open-with",
+    "open-external"
   ],
   "files": [
     "bin",
