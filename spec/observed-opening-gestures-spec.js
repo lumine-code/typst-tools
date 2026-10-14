@@ -161,7 +161,7 @@ describe("typst-tools observed file opening gestures", () => {
     expect(host.isVisible()).toBe(true);
   });
 
-  it("removes row modifier handlers when filtering retires the row", async () => {
+  it("ignores clicks on a row retired by filtering", async () => {
     const retired = rowFor(selectedPath);
     await model.setQuery("first");
     const event = new MouseEvent("click", {
