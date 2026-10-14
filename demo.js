@@ -5,10 +5,13 @@ module.exports = {
   viewport: { width: 1250, height: 760 },
   async before() {},
   async prepare(context) {
-    const { lumine, state, fixture, open, packagePath } = context;
+    const { lumine, state, fixture, open } = context;
     state.editor = await open("documents/typst-tools/report.typ");
     await lumine.project.setPaths([fixture("documents/typst-tools")]);
-    lumine.config.set("typst-tools.typstPath", packagePath("typst-tools", "bin/typst.exe"));
+    lumine.config.set(
+      "typst-tools.typstPath",
+      process.env.LUMINE_DEMO_TYPST || lumine.config.get("typst-tools.typstPath") || "typst",
+    );
   },
   scenes: [
     {
