@@ -25,8 +25,11 @@
               "command": "typst-tools:compile"
             },
             {
-              "label": "Compile on Save",
+              "label": "Toggle Compile on Save",
               "command": "typst-tools:watch"
+            },
+            {
+              "type": "separator"
             },
             {
               "label": "Open PDF",
@@ -40,17 +43,6 @@
               "type": "separator"
             },
             {
-              "label": "Observed Files",
-              "command": "typst-tools:observed-files"
-            },
-            {
-              "label": "Clear All Observed Files",
-              "command": "typst-tools:clear-all-observed-files"
-            },
-            {
-              "type": "separator"
-            },
-            {
               "label": "Interrupt",
               "command": "typst-tools:interrupt"
             },
@@ -59,22 +51,30 @@
               "command": "typst-tools:interrupt-all"
             },
             {
+              "type": "separator"
+            },
+            {
               "label": "Stop and Clear Diagnostics",
               "command": "typst-tools:stop-and-clear-diagnostics"
             },
             {
+              "label": "Clear Diagnostics",
+              "command": "typst-tools:clean-linter"
+            },
+            {
               "type": "separator"
             },
             {
-              "label": "Clear Linter",
-              "command": "typst-tools:clean-linter"
+              "label": "Observed Files",
+              "command": "typst-tools:observed-files"
+            },
+            {
+              "label": "Clear All Observed Files",
+              "command": "typst-tools:clear-all-observed-files"
             },
             {
               "label": "List Fonts",
               "command": "typst-tools:list-fonts"
-            },
-            {
-              "type": "separator"
             },
             {
               "label": "Install Typst",
