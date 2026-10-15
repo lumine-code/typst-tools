@@ -22,7 +22,7 @@
   "specPackages": [
     "linter",
     "status-bar",
-    "open-with",
+    "launcher",
     "open-external"
   ],
   "files": [

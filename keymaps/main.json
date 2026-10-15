@@ -11,7 +11,7 @@
   },
   ".typst-tools-observed-files-list lumine-text-editor[mini]": {
     "cmdorctrl-d": "typst-tools:unobserve-selected-file",
-    "alt-enter": "typst-tools:open-with",
+    "alt-enter": "typst-tools:open",
     "ctrl-alt-enter": "typst-tools:open-external",
     "alt-shift-enter": "typst-tools:show-in-folder"
   }
