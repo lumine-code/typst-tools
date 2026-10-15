@@ -11,6 +11,7 @@ describe("typst-tools status menus", () => {
     directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "typst-tools-status-")));
     await fs.writeFile(path.join(directory, "document.typ"), "source");
     editor = await lumine.workspace.open(path.join(directory, "document.typ"));
+    editor.getElement().focus();
     main = (await lumine.packages.activatePackage("typst-tools")).mainModule;
     main.ensureStatusBarViews();
     tile = main.statusBarView.getElement();
@@ -74,7 +75,7 @@ describe("typst-tools status menus", () => {
     expect(
       items.find((item) => item.command === "typst-tools:stop-and-clear-diagnostics")
         .keyBindingLabel,
-    ).toBe("");
+    ).toBeUndefined();
   });
   it("shows user-assigned editor shortcuts for splitting and stopping the document", async () => {
     editor.getElement().setAttribute("data-grammar", "typst");
@@ -96,6 +97,7 @@ describe("typst-tools status menus", () => {
       for (const [index, command] of commands.entries())
         expect(row(items, command).keyBindingLabel).toBe("F" + (9 + index));
       const element = document.createElement("div");
+      element.tabIndex = -1;
       const pdf = {
         filePath: editor.getPath().replace(/\.typ$/, ".pdf"),
         getTitle: () => "PDF",
@@ -103,9 +105,10 @@ describe("typst-tools status menus", () => {
       };
       const pane = lumine.workspace.getMainWindow().getEditorContainer().getActivePane();
       pane.activateItem(pdf);
+      element.focus();
       const pdfMenu = menu();
       for (const command of commands) {
-        expect(row(pdfMenu, command).keyBindingLabel).toBe("");
+        expect(row(pdfMenu, command).keyBindingLabel).toBeUndefined();
         expect(row(pdfMenu, command).enabled).toBe(true);
       }
       await pane.destroyItem(pdf);
@@ -123,6 +126,7 @@ describe("typst-tools status menus", () => {
       "F5",
     );
     const element = document.createElement("div");
+    element.tabIndex = -1;
     const item = {
       filePath: editor.getPath().replace(/\.typ$/, ".pdf"),
       getTitle: () => "PDF",
@@ -130,13 +134,40 @@ describe("typst-tools status menus", () => {
     };
     const container = lumine.workspace.getMainWindow().getEditorContainer();
     container.getActivePane().activateItem(item);
+    element.focus();
     const items = menu();
     for (const command of ["compile", "watch"])
       expect(items.find((item) => item.command === "typst-tools:" + command).keyBindingLabel).toBe(
-        "",
+        command === "compile" ? "" : undefined,
       );
     expect(items.find((item) => item.command === "typst-tools:compile").enabled).toBe(true);
     await container.getActivePane().destroyItem(item);
+  });
+  it("compiles the PDF source through the real status popup while preserving the focused target", async () => {
+    const element = document.createElement("div");
+    element.tabIndex = -1;
+    const pdf = {
+      filePath: editor.getPath().replace(/\.typ$/, ".pdf"),
+      getTitle: () => "PDF",
+      getElement: () => element,
+    };
+    const pane = lumine.workspace.getMainWindow().getEditorContainer().getActivePane();
+    const compile = spyOn(main, "compileFromStatusBar").and.callThrough();
+    pane.activateItem(pdf);
+    element.focus();
+    const popup = lumine.contextMenu.show(tile, menu());
+    try {
+      popup.rootList.items
+        .find((item) => item.template.command === "typst-tools:compile")
+        .activate();
+      await conditionPromise(() => main.runCompilation.calls.count() > 0);
+      expect(main.runCompilation).toHaveBeenCalledOnceWith(editor.getPath());
+      expect(compile.calls.mostRecent().args[0].target).toBe(element);
+      expect(compile.calls.mostRecent().args[0].detail.fromStatusBar).toBe(true);
+    } finally {
+      popup.close();
+      await pane.destroyItem(pdf, true);
+    }
   });
   it("resolves the primary keyboard hint from the tile's current editor", async () => {
     const options = tooltipCalls.calls.all().find((call) => call.args[0] === tile).args[1];

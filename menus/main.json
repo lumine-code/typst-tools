@@ -86,46 +86,54 @@
     }
   ],
   "context-menu": {
-    ".typst-tools-status": [
-      {
-        "type": "separator"
-      },
-      {
-        "label": "Compile",
-        "command": "typst-tools:compile"
-      },
-      {
-        "label": "Compile on Save",
-        "type": "checkbox",
-        "command": "typst-tools:watch"
-      },
-      {
-        "label": "Split PDF and Source",
-        "command": "typst-tools:split-pdf-source"
-      },
-      {
-        "label": "Stop and Clear Diagnostics",
-        "command": "typst-tools:stop-and-clear-diagnostics"
-      },
-      {
-        "type": "separator"
-      }
-    ],
-    ".typst-tools-observed-status": [
-      {
-        "type": "separator"
-      },
-      {
-        "label": "Observed Files…",
-        "command": "typst-tools:observed-files"
-      },
-      {
-        "label": "Stop Observing All Files",
-        "command": "typst-tools:clear-all-observed-files"
-      },
-      {
-        "type": "separator"
-      }
-    ]
+    ".typst-tools-status": {
+      "commandTarget": "focus",
+      "items": [
+        {
+          "type": "separator"
+        },
+        {
+          "label": "Compile",
+          "command": "typst-tools:compile",
+          "commandDetail": { "fromStatusBar": true },
+          "keyBindingCommand": "typst-tools:compile"
+        },
+        {
+          "label": "Compile on Save",
+          "type": "checkbox",
+          "command": "typst-tools:watch"
+        },
+        {
+          "label": "Split PDF and Source",
+          "command": "typst-tools:split-pdf-source"
+        },
+        {
+          "label": "Stop and Clear Diagnostics",
+          "command": "typst-tools:stop-and-clear-diagnostics"
+        },
+        {
+          "type": "separator"
+        }
+      ]
+    },
+    ".typst-tools-observed-status": {
+      "commandTarget": "focus",
+      "items": [
+        {
+          "type": "separator"
+        },
+        {
+          "label": "Observed Files…",
+          "command": "typst-tools:observed-files"
+        },
+        {
+          "label": "Stop Observing All Files",
+          "command": "typst-tools:clear-all-observed-files"
+        },
+        {
+          "type": "separator"
+        }
+      ]
+    }
   }
 }
