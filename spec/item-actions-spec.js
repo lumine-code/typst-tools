@@ -74,7 +74,14 @@ describe("typst-tools item actions", () => {
     expect(unobserve.description).toBe(
       "Stop compiling the selected file on save and drop it from this list.",
     );
-    expect(unobserve.keystrokes).toEqual(["ctrl-d"]);
+    expect(unobserve.keystrokes).toEqual([process.platform === "darwin" ? "cmd-d" : "ctrl-d"]);
+    // Resolve at the query editor: an ancestor binding loses to select-word.
+    expect(
+      lumine.keymaps.findKeyBindings({
+        target: list.selectList.getQueryEditor().getElement(),
+        keystrokes: unobserve.keystrokes[0],
+      })[0]?.command,
+    ).toBe("typst-tools:unobserve-selected-file");
     expect(unobserve.context).toBe("item");
 
     const clear = byCommand.get("typst-tools:clear-all-observed-files");

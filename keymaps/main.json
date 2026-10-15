@@ -9,10 +9,8 @@
     "ctrl-f6": "typst-tools:interrupt-all",
     "f7": "typst-tools:open-pdf"
   },
-  ".typst-tools-observed-files-list": {
-    "ctrl-d": "typst-tools:unobserve-selected-file"
-  },
   ".typst-tools-observed-files-list lumine-text-editor[mini]": {
+    "cmdorctrl-d": "typst-tools:unobserve-selected-file",
     "alt-enter": "typst-tools:open-with",
     "ctrl-alt-enter": "typst-tools:open-external",
     "alt-shift-enter": "typst-tools:show-in-folder"
