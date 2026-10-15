@@ -65,11 +65,11 @@
               "type": "separator"
             },
             {
-              "label": "Observed Files",
+              "label": "Observed Files…",
               "command": "typst-tools:observed-files"
             },
             {
-              "label": "Clear All Observed Files",
+              "label": "Stop Observing All Files",
               "command": "typst-tools:clear-all-observed-files"
             },
             {
@@ -116,7 +116,7 @@
         "type": "separator"
       },
       {
-        "label": "Observed Files",
+        "label": "Observed Files…",
         "command": "typst-tools:observed-files"
       },
       {
