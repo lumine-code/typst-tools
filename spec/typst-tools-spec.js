@@ -145,6 +145,7 @@ describe("typst-tools", () => {
         ),
       };
       spyOn(lumine.workspace, "getTextEditors").and.returnValue([editor]);
+      editor.isDestroyed = () => false;
       spyOn(mainModule, "runCompilation");
 
       const compiling = mainModule.compileFromStatusBar();
