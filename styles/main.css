@@ -6,7 +6,7 @@
 
 .typst-tools-status {
   padding: 0 0.5em;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
@@ -14,11 +14,10 @@
 
   &:hover {
     background-color: var(--background-color-highlight);
-    opacity: 0.8;
   }
 
   &:active {
-    opacity: 0.6;
+    background-color: var(--background-color-selected);
   }
 
   .typst-tools-status-label {
@@ -30,7 +29,7 @@
   }
 
   .typst-tools-status-timer {
-    opacity: 0.8;
+    color: var(--text-color-subtle);
   }
 
   &.status-idle,
@@ -60,4 +59,14 @@
 .typst-tools-observed-status {
   padding: 0 0.5em;
   cursor: default;
+}
+
+/* Respect reduced motion while retaining visible status indicators. */
+@media (prefers-reduced-motion: reduce) {
+  .typst-tools-status {
+    transition: none;
+  }
+  .typst-tools-status .typst-tools-status-label.building-animation {
+    animation: none;
+  }
 }
