@@ -1,9 +1,9 @@
 {
   "title": "typst-tools",
   "description": "Compile a Typst document and inspect the generated PDF beside its source.",
-  "recordedOn": "2026-10-14",
-  "sourceRevision": "bcd0e22f304463f2d69266c0b582178a5dc9355b",
-  "themeSourceRevision": "7fbd047a87ecf1367c896b19ff270cdc28d319f7",
+  "recordedOn": "2026-10-17",
+  "sourceRevision": "f0fb8ba6919edc1155bdc46e6c97c63c38aaa668",
+  "themeSourceRevision": "80e8864a2e9a891ef1f911d78ab8f03fb3911f58",
   "mode": "normal",
   "fontSettings": "default",
   "scenario": "demo.js",
@@ -11,8 +11,8 @@
   "environment": {
     "platform": "win32",
     "arch": "x64",
-    "electron": "44.7.0",
-    "chrome": "152.0.7977.130",
+    "electron": "44.9.0",
+    "chrome": "152.0.7977.167",
     "devicePixelRatio": 1,
     "locale": "en-GB",
     "fontFamily": "Fira Code, Menlo, DejaVu Sans Mono, Consolas, monospace",
@@ -21,34 +21,35 @@
   },
   "viewport": { "width": 1250, "height": 760 },
   "cornerRadius": 10,
+  "privacy": { "version": 1, "location": "neutral", "textChecked": true },
   "sources": {
     "editor": {
-      "revision": "ca7198ebc05410bb29a14259434e77c94a714b24",
+      "revision": "200598247a0ae40f5e0bf1998b44f7fe77bc0aa7",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "package": {
-      "revision": "bcd0e22f304463f2d69266c0b582178a5dc9355b",
+      "revision": "f0fb8ba6919edc1155bdc46e6c97c63c38aaa668",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "typst-tools": {
-      "revision": "bcd0e22f304463f2d69266c0b582178a5dc9355b",
+      "revision": "f0fb8ba6919edc1155bdc46e6c97c63c38aaa668",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "language-typst": {
-      "revision": "1b6bd7c83cc00c808058596c05018e817708440c",
+      "revision": "d2b56bb0f6e650433a380505e2f91dad4edc449c",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "one-theme": {
-      "revision": "7fbd047a87ecf1367c896b19ff270cdc28d319f7",
-      "dirty": true,
-      "workingTreeHash": "747c4cee87b478321eeff23088839ecac2e69f219495ed4b3d41f532646b3627"
+      "revision": "80e8864a2e9a891ef1f911d78ab8f03fb3911f58",
+      "dirty": false,
+      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "pdf-view": {
-      "revision": "65f9a6858f05174f6cf77f571c4b4f85fcf1bb01",
+      "revision": "754d672f721b0f81b28c73f00699d0e252b51f98",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     }
@@ -65,7 +66,7 @@
       "label": "Compile a Typst document and inspect the generated PDF beside its source.",
       "width": 1250,
       "height": 760,
-      "sha256": "d2b985a44c01d0768dba731e83d29da45a55a743e3458bf02d430a417c264647"
+      "sha256": "bb3a0f48ee2bb75b8aad83efd7d7d09423a9b802c42533795fa366dc33a7b833"
     }
   ]
 }
