@@ -64,7 +64,7 @@ describe("Typst UTF-8 diagnostic stream", () => {
         path.isAbsolute(relative)
       )
         throw new Error("Unsafe diagnostic fixture cleanup");
-      fs.rmSync(resolved, { recursive: true, force: true, maxRetries: 20, retryDelay: 50 });
+      await fs.promises.rm(resolved, { recursive: true, force: true, maxRetries: 20, retryDelay: 50 });
     }
     directory = rootPath = importedPath = editor = main = service = lease = child = null;
   });

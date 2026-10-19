@@ -63,7 +63,7 @@ describe("typst-tools observed file opening gestures", () => {
       relative.startsWith(".." + path.sep)
     )
       throw new Error("Observed fixture escaped its temporary root");
-    fs.rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    await fs.promises.rm(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   });
 
   function rowFor(filePath) {

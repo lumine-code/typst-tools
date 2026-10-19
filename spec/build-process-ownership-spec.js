@@ -47,7 +47,12 @@ describe("Typst build operation ownership", () => {
       relative.startsWith(`..${path.sep}`)
     )
       throw Error("Fixture escaped its owned temporary root");
-    fs.rmSync(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    await fs.promises.rm(directory, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 50,
+    });
   });
   async function heldSave(change) {
     editor.setText("owned accepted save\n");
