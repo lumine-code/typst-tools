@@ -89,7 +89,7 @@ A Typst document compiles from the supplied source path. `compile(filePath)` ret
 
 `onDidFinishBuild` and `onDidFailBuild` are mutually exclusive per build; `onDidChangeBuildStatus` covers both and the transitions between, which is what an indicator should follow.
 
-Diagnostics reach the linter panel on their own, so a consumer does not need to republish `getMessages`.
+Diagnostics reach the diagnostics panel on their own, so a consumer does not need to republish `getMessages`.
 
 The diagnostic store holds the most recently completed current build. `getMessages(root)` and `getMessageStatistics(root)` return its diagnostics only for that compilation root; omitting the root resolves the active Typst editor. Diagnostics for imported sources remain part of their owning root's result. A clean build replaces the snapshot with no messages; the service does not keep a build history.
 

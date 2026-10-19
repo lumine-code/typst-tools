@@ -80,7 +80,7 @@ The status-bar item can be restyled from your `styles.css`, e.g.:
 
 - [`typst-tools`](docs/typst-tools.md): provided to let other packages drive Typst compilation — subscribe to build events (`onDidStartBuild`, `onDidFinishBuild`, `onDidFailBuild`, `onDidChangeBuildStatus`), query status (`getStatus`, `isBuilding`), and control builds (`compile`, `interrupt`, `interruptAll`, `toggleCompileOnSave`).
 - `status-bar`: consumed to show the build state and timer, and the observed-file count, in the status bar.
-- `linter.registry`: consumed to report Typst errors and warnings in the linter panel.
+- `linter.registry`: consumed to report Typst errors and warnings in the diagnostics panel.
 
 ## Contributing
 
