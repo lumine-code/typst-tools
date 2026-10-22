@@ -1,9 +1,9 @@
 {
   "title": "typst-tools",
   "description": "Compile a Typst document and inspect the generated PDF beside its source.",
-  "recordedOn": "2026-10-22",
-  "sourceRevision": "1b9b6a7e8a73ef501ec07bdfd3eb994d2ac7f20e",
-  "themeSourceRevision": "c087b608c20a2126307e99b38d40b3ca9c3ebbf6",
+  "recordedOn": "2026-10-17",
+  "sourceRevision": "f0fb8ba6919edc1155bdc46e6c97c63c38aaa668",
+  "themeSourceRevision": "80e8864a2e9a891ef1f911d78ab8f03fb3911f58",
   "mode": "normal",
   "fontSettings": "default",
   "scenario": "demo.js",
@@ -24,17 +24,17 @@
   "privacy": { "version": 1, "location": "neutral", "textChecked": true },
   "sources": {
     "editor": {
-      "revision": "eda1f70145b8fed1076f36b05b72d89b7641dab2",
+      "revision": "200598247a0ae40f5e0bf1998b44f7fe77bc0aa7",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "package": {
-      "revision": "1b9b6a7e8a73ef501ec07bdfd3eb994d2ac7f20e",
+      "revision": "f0fb8ba6919edc1155bdc46e6c97c63c38aaa668",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "typst-tools": {
-      "revision": "1b9b6a7e8a73ef501ec07bdfd3eb994d2ac7f20e",
+      "revision": "f0fb8ba6919edc1155bdc46e6c97c63c38aaa668",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
@@ -44,12 +44,12 @@
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "one-theme": {
-      "revision": "c087b608c20a2126307e99b38d40b3ca9c3ebbf6",
+      "revision": "80e8864a2e9a891ef1f911d78ab8f03fb3911f58",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "pdf-view": {
-      "revision": "675c53ab85b68d025766902dc1f07f61bd19be99",
+      "revision": "754d672f721b0f81b28c73f00699d0e252b51f98",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     }
@@ -66,7 +66,7 @@
       "label": "Compile a Typst document and inspect the generated PDF beside its source.",
       "width": 1250,
       "height": 760,
-      "sha256": "311941c2db4e684abf3e208714e9fe9abad6a76eb8b43b7ed6de3bbbec693630"
+      "sha256": "bb3a0f48ee2bb75b8aad83efd7d7d09423a9b802c42533795fa366dc33a7b833"
     }
   ]
 }

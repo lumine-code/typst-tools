@@ -44,13 +44,6 @@
   &.status-error {
     color: var(--text-color-error);
   }
-
-  &.status-success,
-  &.status-error {
-    .typst-tools-status-timer {
-      color: inherit;
-    }
-  }
 }
 
 @keyframes typst-pulse {
