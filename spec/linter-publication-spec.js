@@ -7,6 +7,8 @@ describe("Typst diagnostics through the actual indie linter service", () => {
 
   beforeEach(async () => {
     jasmine.useRealClock();
+    const language = await lumine.packages.activatePackage("language-text");
+    await language.resourceLoadPromise;
     jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
     directory = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), "typst-linter-")));
     filePath = path.join(directory, "main.typ");

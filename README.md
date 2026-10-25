@@ -36,6 +36,8 @@ The status bar item shows the build state of the active file with a live timer (
 
 Compile-on-save is tracked per file path rather than per editor, so a file keeps recompiling on every change even after you close its tab. A second status-bar item on the right shows how many files are currently observed and is hidden when there are none. Left click it to open the observed-files list, where a file can be opened or dropped from observation; right click opens a menu to list files or stop observing them all. Observed files are not remembered between sessions.
 
+Automatic compilation pauses while an open source document uses the None grammar. Selecting None cancels its queued automatic build and interrupts its running build; choosing a grammar lets later file changes compile again. The file remains on the observed-files list, and explicit build and file operations remain available.
+
 ## Commands
 
 Commands available in `lumine-workspace`:
