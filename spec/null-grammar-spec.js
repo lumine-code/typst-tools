@@ -72,4 +72,22 @@ describe("typst-tools automatic builds without a grammar", () => {
     expect(main.buildProcesses.get(filePath)).toBe(replacement);
     main.buildProcesses.delete(filePath);
   });
+
+  it("respects closed None file associations and an open explicit grammar choice", () => {
+    const compile = spyOn(main, "compileFilePath");
+    const grammar = editor.getGrammar();
+    const extension = path.extname(editor.getPath()).slice(1);
+    lumine.config.set("core.customFileTypes", {
+      [lumine.grammars.nullGrammar.scopeName]: [extension],
+    });
+    editor.setGrammar(grammar);
+    emitter.emit("change", []);
+    advanceClock(200);
+    expect(compile).toHaveBeenCalledTimes(1);
+    compile.calls.reset();
+    editor.destroy();
+    emitter.emit("change", []);
+    advanceClock(200);
+    expect(compile).not.toHaveBeenCalled();
+  });
 });
