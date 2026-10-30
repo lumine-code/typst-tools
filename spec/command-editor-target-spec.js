@@ -58,6 +58,23 @@ describe("Typst compile command editor target", () => {
     expect(main.isCompileOnSaveEnabledForFile(files[0])).toBe(true);
     expect(main.isCompileOnSaveEnabledForFile(files[1])).toBe(false);
   });
+
+  it("reports the saved target's compile-on-save policy and refreshes aliases after direct changes", () => {
+    const state = (target) => lumine.commands.getCommandState("typst-tools:watch", { target });
+    const invalidate = spyOn(lumine.commands, "invalidateAvailability").and.callThrough();
+    expect(state(first.element)).toEqual({ type: "checkbox", checked: false });
+    expect(main.setCompileOnSaveForFile(files[0], true)).toBe(true);
+    expect(invalidate).toHaveBeenCalled();
+    expect(lumine.workspace.getActiveTextEditor()).toBe(second);
+    expect(state(first.element)).toEqual({ type: "checkbox", checked: true });
+    expect(state(second.element)).toEqual({ type: "checkbox", checked: false });
+
+    invalidate.calls.reset();
+    main.clearCompileOnSaveFiles();
+    expect(invalidate).toHaveBeenCalled();
+    expect(state(first.element)).toEqual({ type: "checkbox", checked: false });
+    expect(main.runCompilation).not.toHaveBeenCalled();
+  });
   it("opens the output belonging to the dispatch editor", async () => {
     const outputs = files.map((file) => file.replace(/\.typ$/, ".pdf"));
     for (const output of outputs) fs.writeFileSync(output, "owned output placeholder");
