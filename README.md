@@ -2,15 +2,15 @@
 
 Compile Typst documents with the typst CLI and view PDFs.
 
-Includes linter diagnostics, multiple simultaneous builds, and a built-in Typst installer.
+Uses Tasks for process execution, diagnostics and file observation, with a built-in Typst installer.
 
 ## Features
 
 - **Compilation**: build documents using the `typst` compiler with configurable output format.
 - **Compile-on-save**: automatically recompile observed files in the background, even after their editor is closed.
-- **Observed files**: track every file watched for compile-on-save from a searchable list and a status-bar counter.
+- **Observed files**: track every file watched for compile-on-save from a searchable list and the shared Tasks controls.
 - **PDF viewing**: open output PDFs internally via [pdf-view](https://github.com/lumine-code/pdf-view).
-- **Linter integration**: error and warning reporting via `linter.registry` with clickable references to source locations.
+- **Diagnostics**: report errors and warnings through Tasks, with clickable references to source locations.
 - **Multiple builds**: compile multiple files simultaneously with independent build states.
 - **Built-in installer**: download the Typst binary directly from GitHub releases.
 
@@ -30,11 +30,17 @@ This package requires the `typst` binary. Run the `Typst Tools: Install Typst` c
 
 If `typst` is not in your PATH, set the full path in the package settings under **Path to Typst**.
 
+The `tasks` package must be installed and enabled. Typst Tools registers its compiler with the `tasks` service; Tasks owns execution, cancellation, output, diagnostics and compile-on-save observation. Typst Tools supplies compiler settings, parses Typst diagnostics and identifies the output files. Tasks controls are disabled while that service is unavailable.
+
+Manual document builds save their open Typst source before starting the compiler, including requests sent directly through the shared service.
+
 Compiler errors and warnings without a source location are attached to the beginning of the main document.
 
-The status bar item shows the build state of the active file with a live timer (`Typ` idle, `Typ*` compile-on-save enabled). Left click compiles, alt-left click toggles compile-on-save, middle click splits PDF and Typst source, and right click opens a menu containing all these actions and Stop and Clear Diagnostics. The item stays visible while viewing the output PDF, and opening a PDF during a build waits for completion before showing the updated file. Each file tracks its own build state independently, so several documents can compile at the same time.
+Tasks provides one shared status control for document builds, running tasks and retained output. Use **Packages > Typst Tools** for compilation, compile-on-save, stopping and PDF/source operations. Those commands act on the source document or the source associated with the focused PDF, so splitting the PDF and source works from either view. Opening output during a build waits for its successful completion. Several documents can compile independently.
 
-Compile-on-save is tracked per file path rather than per editor, so a file keeps recompiling on every change even after you close its tab. A second status-bar item on the right shows how many files are currently observed and is hidden when there are none. Left click it to open the observed-files list, where a file can be opened or dropped from observation; right click opens a menu to list files or stop observing them all. Observed files are not remembered between sessions.
+In PDF View, F12 rebuilds the exact source associated by Typst Tools through the shared Tasks service without opening its panel, including existing PDFs with no build history.
+
+Compile-on-save is tracked per file path rather than per editor, so an observed source keeps recompiling after you close its tab. Open **Typst Tools: Observed Files** to search those sources, open them or stop observing them. Observed files are not remembered between sessions.
 
 Automatic compilation pauses while an open source document uses the None grammar. Selecting None cancels its queued automatic build and interrupts its running build; choosing a grammar lets later file changes compile again. The file remains on the observed-files list, and explicit build and file operations remain available.
 
@@ -64,25 +70,10 @@ Actions shown for `.typst-tools-observed-files-list`:
 - `typst-tools:unobserve-selected-file`: stop observing the selected file,
 - `typst-tools:clear-all-observed-files`: stop observing every file at once.
 
-Status tooltips show the current state and primary click action with its matching keyboard binding; secondary actions are available in context menus.
-
-## Customization
-
-The status-bar item can be restyled from your `styles.css`, e.g.:
-
-```css
-.typst-tools-status {
-  &.status-building {
-    color: var(--text-color-info);
-  }
-}
-```
-
 ## Services
 
-- [`typst-tools`](docs/typst-tools.md): provided to let other packages drive Typst compilation — subscribe to build events (`onDidStartBuild`, `onDidFinishBuild`, `onDidFailBuild`, `onDidChangeBuildStatus`), query status (`getStatus`, `isBuilding`), and control builds (`compile`, `interrupt`, `interruptAll`, `toggleCompileOnSave`).
-- `status-bar`: consumed to show the build state and timer, and the observed-file count, in the status bar.
-- `linter.registry`: consumed to report Typst errors and warnings in the diagnostics panel.
+- [`tasks`](https://github.com/lumine-code/tasks/blob/master/docs/tasks.md): consumed to register the Typst compiler and run, observe, stop and inspect document builds. Other packages follow this shared service's jobs and artifacts.
+- [`pdf-view.build-provider`](https://github.com/lumine-code/pdf-view/blob/master/docs/pdf-view.build-provider.md): provided so PDF View asks Typst Tools to identify its source and compile it through the shared backend.
 
 ## Contributing
 

@@ -5,11 +5,10 @@ describe("typst-tools command availability", () => {
     lumine.commands.canDispatch(lumine.workspace.getElement(), "typst-tools:" + name);
   beforeEach(async () => {
     jasmine.attachToDOM(lumine.workspace.getElement());
+    await lumine.packages.activatePackage("tasks");
     main = (await lumine.packages.activatePackage("typst-tools")).mainModule;
   });
   afterEach(async () => {
-    main.buildProcesses.clear();
-    main.compileOnSaveFiles.clear();
     editor?.destroy();
     await lumine.packages.deactivatePackage("typst-tools");
   });
@@ -37,9 +36,8 @@ describe("typst-tools command availability", () => {
     const text = spyOn(editor, "getText").and.callThrough();
     expect(can("compile")).toBeTrue();
     expect(can("interrupt")).toBeFalse();
-    const buildPath = source;
-
-    main.buildProcesses.set(buildPath, {});
+    spyOn(main, "getJob").and.callFake((file) => (file === source ? { state: "running" } : null));
+    spyOn(main, "getJobs").and.returnValue([{ state: "running" }]);
     expect(can("compile")).toBeFalse();
     expect(can("interrupt")).toBeTrue();
     expect(can("interrupt-all")).toBeTrue();
@@ -47,7 +45,7 @@ describe("typst-tools command availability", () => {
     expect(expensive).not.toHaveBeenCalled();
     expect(text).not.toHaveBeenCalled();
     expect(main.observedFilesList).toBeNull();
-    main.compileOnSaveFiles.set(source, {});
+    spyOn(main, "getCompileOnSaveFiles").and.returnValue([source]);
     expect(can("clear-all-observed-files")).toBeTrue();
     editor.getBuffer().setPath(path.join(process.cwd(), "unrelated.txt"));
     expect(can("compile")).toBeFalse();

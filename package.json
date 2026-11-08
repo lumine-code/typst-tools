@@ -20,19 +20,17 @@
   },
   "main": "./lib/main",
   "specPackages": [
+    "tasks",
     "linter",
-    "status-bar",
     "launcher",
     "open-external"
   ],
   "files": [
     "bin",
-    "docs",
     "keymaps",
     "lib",
     "menus",
     "spec",
-    "styles",
     "THIRD_PARTY_NOTICES"
   ],
   "scripts": {
@@ -42,9 +40,9 @@
     "format:check": "prettier --check ."
   },
   "providedServices": {
-    "typst-tools": {
+    "pdf-view.build-provider": {
       "versions": {
-        "1.0.0": "provideTypstTools"
+        "1.0.0": "providePdfBuildProvider"
       }
     },
     "background-tips.provider": {
@@ -54,14 +52,9 @@
     }
   },
   "consumedServices": {
-    "status-bar": {
+    "tasks": {
       "versions": {
-        "^2.0.0": "consumeStatusBar"
-      }
-    },
-    "linter.registry": {
-      "versions": {
-        "^1.0.0": "consumeLinterRegistry"
+        "^1.0.0": "consumeTasks"
       }
     }
   },

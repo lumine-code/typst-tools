@@ -1,4 +1,3 @@
-const windowService = require("./helpers/window-service");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
@@ -17,9 +16,9 @@ describe("typst-tools", () => {
     editors = [];
     workspaceElement = lumine.views.getView(lumine.workspace);
     jasmine.attachToDOM(workspaceElement);
+    await lumine.packages.activatePackage("tasks");
     const pack = await lumine.packages.activatePackage("typst-tools");
     mainModule = pack.mainModule;
-    mainModule.ensureStatusBarViews();
   });
 
   afterEach(async () => {
@@ -103,20 +102,19 @@ describe("typst-tools", () => {
     });
   });
 
-  describe("status-bar compilation", () => {
+  describe("PDF source compilation", () => {
     it("compiles an existing source without an open editor", async () => {
       const directory = makeTempDir();
       const typFile = path.join(directory, "document.typ");
       const pdfFile = path.join(directory, "document.pdf");
       fs.writeFileSync(typFile, "content");
-      mainModule.currentTypFile = typFile;
       spyOn(lumine.workspace.getCenter(), "getActivePaneItem").and.returnValue({
         filePath: pdfFile,
       });
       spyOn(lumine.workspace, "getTextEditors").and.returnValue([]);
       spyOn(mainModule, "runCompilation");
 
-      await mainModule.compileFromStatusBar();
+      await mainModule.compile();
 
       expect(mainModule.runCompilation).toHaveBeenCalledWith(typFile);
     });
@@ -125,7 +123,6 @@ describe("typst-tools", () => {
       const directory = makeTempDir();
       const typFile = path.join(directory, "document.typ");
       const pdfFile = path.join(directory, "document.pdf");
-      mainModule.currentTypFile = typFile;
       spyOn(lumine.workspace.getCenter(), "getActivePaneItem").and.returnValue({
         filePath: pdfFile,
       });
@@ -148,115 +145,13 @@ describe("typst-tools", () => {
       editor.isDestroyed = () => false;
       spyOn(mainModule, "runCompilation");
 
-      const compiling = mainModule.compileFromStatusBar();
+      const compiling = mainModule.compile();
       expect(editor.save).toHaveBeenCalled();
       expect(mainModule.runCompilation).not.toHaveBeenCalled();
 
       finishSave();
       await compiling;
       expect(mainModule.runCompilation).toHaveBeenCalledWith(typFile);
-    });
-  });
-
-  describe("provided typst-tools service", () => {
-    let service;
-
-    beforeEach(() => {
-      service = mainModule.provideTypstTools();
-    });
-
-    it("exposes the API consumed by pdf-view", () => {
-      // pdf-view calls compile() and subscribes to the three build events.
-      for (const method of [
-        "compile",
-        "onDidStartBuild",
-        "onDidFinishBuild",
-        "onDidFailBuild",
-        "onDidChangeBuildStatus",
-        "getStatus",
-        "isBuilding",
-        "interrupt",
-        "interruptAll",
-        "toggleCompileOnSave",
-        "isCompileOnSaveEnabled",
-        "getMessages",
-        "getMessageStatistics",
-        "getOutputPath",
-        "openPdf",
-      ]) {
-        expect(typeof service[method]).toBe("function");
-      }
-    });
-
-    it("emits build lifecycle events with the file payload", () => {
-      const file = path.join(__dirname, "doc.typ");
-      const started = [];
-      const finished = [];
-      const failed = [];
-      const statuses = [];
-      const disposables = [
-        service.onDidStartBuild((data) => started.push(data)),
-        service.onDidFinishBuild((data) => finished.push(data)),
-        service.onDidFailBuild((data) => failed.push(data)),
-        service.onDidChangeBuildStatus((data) => statuses.push(data)),
-      ];
-      for (const disposable of disposables) {
-        expect(typeof disposable.dispose).toBe("function");
-      }
-
-      service.startBuild(file);
-      expect(started).toEqual([{ file }]);
-      expect(service.isBuilding(file)).toBe(true);
-      expect(service.getStatus(file).status).toBe("building");
-
-      service.finishBuild(file, "output text", 123);
-      expect(finished.length).toBe(1);
-      expect(finished[0].file).toBe(file);
-      expect(finished[0].output).toBe("output text");
-      expect(service.isBuilding(file)).toBe(false);
-      expect(service.getStatus(file).status).toBe("success");
-
-      service.startBuild(file);
-      service.failBuild(file, "Exit code 1", "stderr text");
-      expect(failed.length).toBe(1);
-      expect(failed[0].file).toBe(file);
-      expect(failed[0].error).toBe("Exit code 1");
-      expect(service.getStatus(file).status).toBe("error");
-
-      expect(statuses.map((s) => s.status)).toEqual(["building", "success", "building", "error"]);
-
-      for (const disposable of disposables) {
-        disposable.dispose();
-      }
-      service.reset();
-    });
-
-    it("delegates compile() to the main module for .typ files only", () => {
-      spyOn(mainModule, "runCompilation");
-      expect(service.compile("/tmp/doc.txt")).toBe(false);
-      expect(service.compile(null)).toBe(false);
-      expect(mainModule.runCompilation).not.toHaveBeenCalled();
-      expect(service.compile("/tmp/doc.typ")).toBe(true);
-      expect(mainModule.runCompilation).toHaveBeenCalledWith("/tmp/doc.typ");
-    });
-
-    it("refuses to start a second build for a file already building", () => {
-      spyOn(mainModule, "runCompilation");
-      const file = "/tmp/busy.typ";
-      service.startBuild(file);
-      expect(service.compile(file)).toBe(false);
-      expect(mainModule.runCompilation).not.toHaveBeenCalled();
-      service.reset(file);
-    });
-
-    it("reports aggregate status across files", () => {
-      service.startBuild("/tmp/a.typ");
-      service.startBuild("/tmp/b.typ");
-      const status = service.getStatus();
-      expect(status.status).toBe("building");
-      expect(status.buildingCount).toBe(2);
-      service.reset();
-      expect(service.getStatus().status).toBe("idle");
     });
   });
 
@@ -333,254 +228,6 @@ describe("typst-tools", () => {
     it("maps output files back to .typ sources", () => {
       expect(getSourcePath("/proj/doc.pdf")).toBe("/proj/doc.typ");
       expect(getSourcePath("/proj/doc.svg")).toBe("/proj/doc.typ");
-    });
-  });
-
-  describe("linter integration", () => {
-    it("registers an indie linter through the linter.registry service", () => {
-      const registered = [];
-      const indie = {
-        name: "Typst",
-        setAllMessages() {},
-        clearMessages() {},
-        dispose() {},
-      };
-      const registration = mainModule.consumeLinterRegistry((options) => {
-        registered.push(options);
-        return indie;
-      });
-      expect(registered).toEqual([{ name: "Typst" }]);
-      expect(mainModule.linterProvider.indieInstance).toBe(indie);
-
-      spyOn(indie, "dispose");
-      registration.dispose();
-      expect(indie.dispose).toHaveBeenCalled();
-      expect(mainModule.linterProvider.indieInstance).toBeNull();
-    });
-
-    it("converts and deduplicates messages for the linter", () => {
-      const calls = [];
-      mainModule.linterProvider.register({
-        setAllMessages(messages) {
-          calls.push(messages);
-        },
-        clearMessages() {},
-      });
-      const message = {
-        severity: "error",
-        excerpt: "boom",
-        location: {
-          file: "doc.typ",
-          fullPath: "/proj/doc.typ",
-          position: { start: { row: 2, column: 4 }, end: { row: 2, column: 7 } },
-        },
-      };
-      mainModule.linterProvider.setMessages([message, { ...message }]);
-      expect(calls.length).toBe(1);
-      expect(calls[0]).toEqual([
-        {
-          severity: "error",
-          location: {
-            file: "/proj/doc.typ",
-            position: [
-              [2, 4],
-              [2, 7],
-            ],
-          },
-          excerpt: "boom",
-        },
-      ]);
-    });
-  });
-
-  describe("compile-on-save observation", () => {
-    it("observes files by path and tracks them in the status view", async () => {
-      const dir = makeTempDir();
-      const file = path.join(dir, "doc.typ");
-      fs.writeFileSync(file, "#set page(width: 10cm)");
-
-      expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(true);
-      const handle = mainModule.compileOnSaveFiles.get(mainModule.getCompileOnSaveKey(file)).file;
-      await handle.ready;
-      expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(true);
-      expect(mainModule.getCompileOnSaveFiles()).toEqual([path.resolve(file)]);
-      expect(mainModule.observedFilesStatusView.count).toBe(1);
-
-      // Enabling twice is a no-op.
-      expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(false);
-
-      expect(mainModule.setCompileOnSaveForFile(file, false)).toBe(true);
-      await handle.closed;
-      expect(handle.isDisposed).toBe(true);
-      expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(false);
-      expect(mainModule.getCompileOnSaveFiles()).toEqual([]);
-      expect(mainModule.observedFilesStatusView.count).toBe(0);
-    });
-
-    it("keeps observing after the file's editor is destroyed", async () => {
-      const dir = makeTempDir();
-      const file = path.join(dir, "doc.typ");
-      fs.writeFileSync(file, "#set page(width: 10cm)");
-
-      const editor = await lumine.workspace.open(file);
-      editors.push(editor);
-      expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(true);
-      const handle = mainModule.compileOnSaveFiles.get(mainModule.getCompileOnSaveKey(file)).file;
-      await handle.ready;
-      expect(mainModule.isCompileOnSaveEnabled(editor)).toBe(true);
-
-      editor.destroy();
-
-      // The observer is keyed by path, not by editor, so closing the editor
-      // must not stop compile-on-save.
-      expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(true);
-      expect(mainModule.observedFilesStatusView.count).toBe(1);
-
-      mainModule.setCompileOnSaveForFile(file, false);
-      await handle.closed;
-    });
-
-    it("clears every observed file at once", async () => {
-      const dir = makeTempDir();
-      const files = ["a.typ", "b.typ"].map((name) => {
-        const file = path.join(dir, name);
-        fs.writeFileSync(file, "#set page(width: 10cm)");
-        mainModule.setCompileOnSaveForFile(file, true);
-        return file;
-      });
-      const handles = [...mainModule.compileOnSaveFiles.values()].map(({ file }) => file);
-      await Promise.all(handles.map((handle) => handle.ready));
-
-      expect(mainModule.getCompileOnSaveFiles().length).toBe(files.length);
-      mainModule.clearCompileOnSaveFiles();
-      await Promise.all(handles.map((handle) => handle.closed));
-      expect(mainModule.getCompileOnSaveFiles()).toEqual([]);
-      expect(mainModule.observedFilesStatusView.count).toBe(0);
-    });
-
-    it("rejects non-typst files", () => {
-      const file = path.join(os.tmpdir(), "doc.txt");
-      expect(mainModule.setCompileOnSaveForFile(file, true)).toBe(false);
-      expect(mainModule.isCompileOnSaveEnabledForFile(file)).toBe(false);
-    });
-  });
-
-  describe("status bar integration", () => {
-    it("keeps build operations headless before the status bar mounts", () => {
-      const view = mainModule.statusBarView;
-      const filePath = path.join(__dirname, "headless.typ");
-      const process = {};
-      mainModule.statusBarView = null;
-      mainModule.currentTypFile = filePath;
-      mainModule.buildProcesses.set(filePath, { process });
-      spyOn(mainModule, "killProcess");
-      spyOn(lumine.workspace, "getActiveTextEditor").and.returnValue({
-        getPath: () => filePath,
-      });
-
-      try {
-        expect(mainModule.isStatusBarActiveFor(filePath)).toBe(false);
-        expect(mainModule.interruptFile(filePath)).toBe(true);
-        expect(mainModule.killProcess).toHaveBeenCalledWith(process);
-
-        const secondProcess = {};
-        mainModule.buildProcesses.set(filePath, { process: secondProcess });
-        expect(mainModule.interruptAllProcesses()).toBe(1);
-        expect(mainModule.killProcess).toHaveBeenCalledWith(secondProcess);
-      } finally {
-        mainModule.statusBarView = view;
-      }
-    });
-
-    it("adds left and right tiles through the status-bar service", async () => {
-      const left = [];
-      const right = [];
-      const leftTile = { destroy: jasmine.createSpy("destroy left tile") };
-      const rightTile = { destroy: jasmine.createSpy("destroy right tile") };
-      const registration = mainModule.consumeStatusBar(
-        windowService({
-          addLeftTile(tile) {
-            left.push(tile);
-            return leftTile;
-          },
-          addRightTile(tile) {
-            right.push(tile);
-            return rightTile;
-          },
-        }),
-      );
-      await Promise.resolve();
-      expect(left.length).toBe(1);
-      expect(left[0].item.classList.contains("typst-tools-status")).toBe(true);
-      expect(right.length).toBe(1);
-      expect(right[0].item.classList.contains("typst-tools-observed-status")).toBe(true);
-
-      registration.dispose();
-      expect(leftTile.destroy).toHaveBeenCalled();
-      expect(rightTile.destroy).toHaveBeenCalled();
-    });
-
-    it("cancels a deferred tile mount when its service registration is disposed", async () => {
-      const addLeftTile = jasmine.createSpy("addLeftTile");
-      const addRightTile = jasmine.createSpy("addRightTile");
-      const registration = mainModule.consumeStatusBar(
-        windowService({ addLeftTile, addRightTile }),
-      );
-
-      registration.dispose();
-      await Promise.resolve();
-
-      expect(addLeftTile).not.toHaveBeenCalled();
-      expect(addRightTile).not.toHaveBeenCalled();
-    });
-
-    it("reflects build status through element classes", () => {
-      const view = mainModule.statusBarView;
-      view.setStatus("building", "", { skipTimer: true });
-      expect(view.element.classList.contains("status-building")).toBe(true);
-      view.setStatus("success");
-      expect(view.element.classList.contains("status-success")).toBe(true);
-      expect(view.element.classList.contains("status-building")).toBe(false);
-      view.setStatus("error");
-      expect(view.element.classList.contains("status-error")).toBe(true);
-      view.setStatus("idle");
-      expect(view.element.classList.contains("status-idle")).toBe(true);
-    });
-
-    it("marks the label when compile-on-save is enabled", () => {
-      const view = mainModule.statusBarView;
-      view.setCompileOnSave(true);
-      expect(view.label.textContent).toBe("Typ*");
-      view.setCompileOnSave(false);
-      expect(view.label.textContent).toBe("Typ");
-    });
-
-    it("does not let a late build update restore the tile over another center item", async () => {
-      const directory = makeTempDir();
-      const typFile = path.join(directory, "document.typ");
-      fs.writeFileSync(typFile, "content");
-      const editor = await lumine.workspace.open(typFile);
-      editors.push(editor);
-      const pane = lumine.workspace.getCenter().getActivePane();
-
-      expect(mainModule.currentTypFile).toBe(typFile);
-      expect(mainModule.statusBarView.element.style.display).toBe("");
-
-      const otherItem = document.createElement("div");
-      otherItem.canCopy = () => false;
-      pane.addItem(otherItem);
-      pane.activateItem(otherItem);
-
-      expect(mainModule.currentTypFile).toBeNull();
-      expect(mainModule.statusBarView.element.style.display).toBe("none");
-
-      if (mainModule.isStatusBarActiveFor(typFile)) {
-        mainModule.statusBarView.setStatus("success");
-      }
-      expect(mainModule.statusBarView.element.style.display).toBe("none");
-
-      pane.activateItem(editor);
-      await pane.destroyItem(otherItem);
     });
   });
 

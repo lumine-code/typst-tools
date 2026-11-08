@@ -18,6 +18,7 @@ describe("Typst compile command editor target", () => {
     files = ["first.typ", "second.typ"].map((name) => path.join(directory, name));
     for (const file of files) fs.writeFileSync(file, "original");
     jasmine.attachToDOM(lumine.workspace.getElement());
+    await lumine.packages.activatePackage("tasks");
     main = (await lumine.packages.activatePackage("typst-tools")).mainModule;
     spyOn(main, "runCompilation").and.returnValue(true);
     first = await lumine.workspace.open(files[0]);
@@ -81,20 +82,15 @@ describe("Typst compile command editor target", () => {
     spyOn(main, "_openPdfDirect").and.resolveTo();
     try {
       await lumine.commands.dispatch(first.element, "typst-tools:open-pdf");
-      expect(main._openPdfDirect).toHaveBeenCalledOnceWith(outputs[0]);
+      expect(main._openPdfDirect).toHaveBeenCalledOnceWith(outputs[0], first.getPath());
     } finally {
       for (const output of outputs) fs.unlinkSync(output);
     }
   });
   it("interrupts only the build belonging to the dispatch editor", async () => {
-    const firstProcess = {},
-      secondProcess = {};
-    spyOn(main, "killProcess");
-    main.buildProcesses.set(files[0], { process: firstProcess });
-    main.buildProcesses.set(files[1], { process: secondProcess });
+    spyOn(main, "isBuilding").and.returnValue(true);
+    const stop = spyOn(main.build, "stop").and.returnValue(true);
     await lumine.commands.dispatch(first.element, "typst-tools:interrupt");
-    expect(main.killProcess).toHaveBeenCalledOnceWith(firstProcess);
-    expect(main.buildProcesses.has(files[0])).toBe(false);
-    expect(main.buildProcesses.get(files[1]).process).toBe(secondProcess);
+    expect(stop).toHaveBeenCalledOnceWith({ providerId: "typst-tools", filePath: files[0] });
   });
 });
