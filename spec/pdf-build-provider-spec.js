@@ -147,13 +147,13 @@ describe("Typst's PDF build provider", () => {
     expect(provider.isBuilding(output)).toBeTrue();
     expect(provider.isBuilding(second.replace(/\.typ$/, ".pdf"))).toBeTrue();
     expect(provider.isBuilding(path.join(directory, "unrelated.pdf"))).toBeFalse();
-    children[0].emit("close", 0, null);
+    firstJob.process.emit("close", 0, null);
     await firstJob.completion;
     expect(provider.isBuilding(output)).toBeFalse();
     expect(provider.canBuild(source)).toBeTrue();
     expect(provider.isBuilding(second.replace(/\.typ$/, ".pdf"))).toBeTrue();
     expect(builds).toHaveBeenCalled();
-    children[1].emit("close", 0, null);
+    secondJob.process.emit("close", 0, null);
     await secondJob.completion;
   });
 
