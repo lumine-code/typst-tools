@@ -117,14 +117,20 @@ describe("Typst compilation through Tasks", () => {
     };
   }
 
-  async function observeSource() {
+  async function observeSource(observationMode) {
     editor.destroy();
     expect(main.setCompileOnSaveForFile(source, true)).toBeTrue();
+    if (observationMode) {
+      expect(
+        service.setObserved({ providerId: "typst-tools", filePath: source, observationMode }, true),
+      ).toBeTrue();
+    }
     const manager = (await lumine.packages.activatePackage("tasks")).mainModule.manager;
     const entry = [...manager.observed.values()].find(
       (candidate) => candidate.providerId === "typst-tools" && candidate.filePath === source,
     );
-    await entry.observation.ready;
+    expect(await entry.observation.ready).toBeTrue();
+    return entry.observation;
   }
 
   it("builds a standalone source with compiler settings and declared output", async () => {
@@ -476,17 +482,32 @@ describe("Typst compilation through Tasks", () => {
     expect(service.getJobs({ providerId: "typst-tools" })).toEqual([job]);
   });
 
-  it("keeps observation idle for generated outputs and source rewrites with identical contents", async () => {
+  it("keeps content-mode observation idle for generated outputs and identical source rewrites", async () => {
     const hint = sourceObservationHints();
-    await observeSource();
+    const observation = await observeSource("content");
     for (const extension of ["pdf", "png", "svg"])
       fs.writeFileSync(source.replace(/\.typ$/, `.${extension}`), `Generated ${extension}\n`);
     fs.writeFileSync(source, fs.readFileSync(source));
     hint();
-    await timeoutPromise(500);
+    expect(await observation.hasChanges()).toBeFalse();
     expect(children.length).toBe(0);
     expect(service.getJobs({ providerId: "typst-tools" })).toEqual([]);
     expect(main.isCompileOnSaveEnabledForFile(source)).toBeTrue();
+  });
+
+  it("compiles after saving identical source contents in the default observation mode", async () => {
+    const previousWrite = new Date(Date.now() - 10_000);
+    fs.utimesSync(source, previousWrite, previousWrite);
+    const contents = fs.readFileSync(source);
+    const hint = sourceObservationHints();
+    await observeSource();
+    fs.writeFileSync(source, contents);
+    hint();
+    await conditionPromise(() => children.length === 1, "the identical Typst source save", 3000);
+    const job = service.getJob({ providerId: "typst-tools", filePath: source });
+    expect(job.reason).toBe("save");
+    await finish(job);
+    expect(job.state).toBe("passed");
   });
 
   it("leaves automatic None-grammar policy to Tasks while observation remains enabled", async () => {
