@@ -38,6 +38,8 @@ Compiler errors and warnings without a source location are attached to the begin
 
 Tasks provides one shared status control for document builds, running tasks and retained output. Use **Packages > Typst Tools** for compilation, compile-on-save, stopping and PDF/source operations. Those commands act on the source document or the source associated with the focused PDF, so splitting the PDF and source works from either view. Opening output during a build waits for its successful completion. Several documents can compile independently.
 
+After a successful compilation produces an available PDF, **Open PDF** appears in the Tasks completion notification and execution details. It opens that execution's output even if you switch documents or change the output format afterward.
+
 In PDF View, F12 rebuilds the exact source associated by Typst Tools through the shared Tasks service without opening its panel, including existing PDFs with no build history.
 
 Compile-on-save is tracked per file path rather than per editor, so an observed source keeps recompiling after you close its tab. Open **Typst Tools: Observed Files** to search those sources, open them or stop observing them. Observed files are not remembered between sessions.

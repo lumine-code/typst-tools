@@ -88,6 +88,45 @@ describe("Typst compilation through Tasks", () => {
     return job;
   }
 
+  function sourceObservationHints() {
+    const changes = [];
+    const invalidations = [];
+    const nativeWatch = lumine.fileWatchClient.watchFile.bind(lumine.fileWatchClient);
+    spyOn(lumine.fileWatchClient, "watchFile").and.callFake((filePath) => {
+      const handle = nativeWatch(filePath);
+      if (filePath !== source) return handle;
+      return {
+        ready: handle.ready,
+        closed: handle.closed,
+        dispose: () => handle.dispose(),
+        onDidChange(callback) {
+          changes.push(callback);
+          return handle.onDidChange(callback);
+        },
+        onDidInvalidate(callback) {
+          invalidations.push(callback);
+          return handle.onDidInvalidate(callback);
+        },
+        onDidError: (callback) => handle.onDidError(callback),
+      };
+    });
+    return () => {
+      for (const callback of changes) callback([{ action: "updated", path: source }]);
+      for (const callback of invalidations)
+        callback({ path: source, reason: "recovery", generation: 2 });
+    };
+  }
+
+  async function observeSource() {
+    editor.destroy();
+    expect(main.setCompileOnSaveForFile(source, true)).toBeTrue();
+    const manager = (await lumine.packages.activatePackage("tasks")).mainModule.manager;
+    const entry = [...manager.observed.values()].find(
+      (candidate) => candidate.providerId === "typst-tools" && candidate.filePath === source,
+    );
+    await entry.observation.ready;
+  }
+
   it("builds a standalone source with compiler settings and declared output", async () => {
     lumine.config.set("typst-tools.fontPaths", [path.join(directory, "Fonts")]);
     lumine.config.set("typst-tools.outputFormat", "svg");
@@ -161,6 +200,162 @@ describe("Typst compilation through Tasks", () => {
     expect(editor.getFileState()).toBe("unmodified");
     await finish(job);
     expect(job.state).toBe("passed");
+  });
+
+  it("opens the successful execution's actual PDF independently of the active document and format", async () => {
+    const output = path.join(directory, "rendered output", "wynik ą.pdf");
+    fs.mkdirSync(path.dirname(output));
+    fs.writeFileSync(output, "%PDF-1.7\nCompiled document\n");
+    const nativePrepare = main.prepareBuild.bind(main);
+    spyOn(main, "prepareBuild").and.callFake((filePath) => ({
+      ...nativePrepare(filePath),
+      artifacts: [{ path: output, kind: "pdf", sourcePath: filePath }],
+    }));
+    const job = await started();
+    await finish(job);
+    expect(service.getActions(job)).toEqual([
+      {
+        id: "open-pdf",
+        label: "Open PDF",
+        description: "Open this execution's compiled PDF.",
+      },
+    ]);
+    await lumine.workspace.open(imported);
+    lumine.config.set("typst-tools.outputFormat", "svg");
+    const open = spyOn(lumine.workspace, "open").and.resolveTo({});
+    const associate = spyOn(service, "associateArtifact").and.callThrough();
+    expect(await service.runAction(job, "open-pdf")).toBeTrue();
+    expect(open).toHaveBeenCalledTimes(1);
+    const [openedPath, options] = open.calls.mostRecent().args;
+    expect(openedPath).toBe(output);
+    expect(options.searchAllPanes).toBeTrue();
+    expect(options.signal.aborted).toBeFalse();
+    expect(typeof options.signal.addEventListener).toBe("function");
+    expect(associate).toHaveBeenCalledOnceWith(
+      { providerId: "typst-tools", filePath: source },
+      output,
+    );
+  });
+
+  it("offers Open PDF after a no-op build and keeps action metadata queries free of filesystem I/O", async () => {
+    fs.writeFileSync(source.replace(/\.typ$/, ".pdf"), "%PDF-1.7\nExisting output\n");
+    const job = await started();
+    await finish(job);
+    const stat = spyOn(fs.promises, "stat").and.throwError("Metadata queries must not read files");
+    const exists = spyOn(fs, "existsSync").and.throwError("Metadata queries must not read files");
+    expect(service.getActions(job).map((action) => action.id)).toEqual(["open-pdf"]);
+    expect(service.getActions(job)[0].run).toBeUndefined();
+    expect(stat).not.toHaveBeenCalled();
+    expect(exists).not.toHaveBeenCalled();
+    stat.and.callThrough();
+    exists.and.callThrough();
+  });
+
+  for (const unavailable of ["missing", "empty", "directory"])
+    it(`omits Open PDF when the declared output is ${unavailable}`, async () => {
+      const output = source.replace(/\.typ$/, ".pdf");
+      if (unavailable === "empty") fs.writeFileSync(output, "");
+      if (unavailable === "directory") fs.mkdirSync(output);
+      const job = await started();
+      await finish(job);
+      expect(job.state).toBe("passed");
+      expect(service.getActions(job)).toEqual([]);
+    });
+
+  it("does not offer an old PDF for failed, cancelled or non-PDF executions", async () => {
+    fs.writeFileSync(source.replace(/\.typ$/, ".pdf"), "%PDF-1.7\nOld output\n");
+    const failed = await started();
+    await finish(failed, "", 1);
+    expect(service.getActions(failed)).toEqual([]);
+    const cancelled = await started();
+    cancelled.stop();
+    await cancelled.completion;
+    expect(cancelled.state).toBe("cancelled");
+    expect(service.getActions(cancelled)).toEqual([]);
+    lumine.config.set("typst-tools.outputFormat", "svg");
+    fs.writeFileSync(source.replace(/\.typ$/, ".svg"), "<svg/>\n");
+    const svg = await started();
+    await finish(svg);
+    expect(svg.state).toBe("passed");
+    expect(service.getActions(svg)).toEqual([]);
+  });
+
+  it("reports a PDF removed after compilation through the shared action error channel", async () => {
+    const output = source.replace(/\.typ$/, ".pdf");
+    fs.writeFileSync(output, "%PDF-1.7\nCompiled output\n");
+    const job = await started();
+    await finish(job);
+    fs.unlinkSync(output);
+    const error = spyOn(lumine.notifications, "addError");
+    const open = spyOn(lumine.workspace, "open");
+    expect(await service.runAction(job, "open-pdf")).toBeFalse();
+    expect(open).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledOnceWith("Unable to run task action: Open PDF", {
+      detail: `Compiled PDF is unavailable: ${output}`,
+    });
+  });
+
+  it("keeps output-opening errors on the shared action error channel without duplicate notifications", async () => {
+    fs.writeFileSync(source.replace(/\.typ$/, ".pdf"), "%PDF-1.7\nCompiled output\n");
+    const job = await started();
+    await finish(job);
+    spyOn(lumine.workspace, "open").and.rejectWith(new Error("Cannot open this PDF"));
+    const error = spyOn(lumine.notifications, "addError");
+    expect(await service.runAction(job, "open-pdf")).toBeFalse();
+    expect(error).toHaveBeenCalledOnceWith("Unable to run task action: Open PDF", {
+      detail: "Cannot open this PDF",
+    });
+  });
+
+  for (const retirement of ["removed log", "provider", "backend"])
+    it(`does not open a PDF when its ${retirement} retires during the action's file check`, async () => {
+      const output = source.replace(/\.typ$/, ".pdf");
+      fs.writeFileSync(output, "%PDF-1.7\nCompiled output\n");
+      const job = await started();
+      await finish(job);
+      const nativeStat = fs.promises.stat;
+      let release;
+      spyOn(fs.promises, "stat").and.callFake((filePath, ...args) =>
+        filePath === output
+          ? new Promise((resolve) => {
+              release = resolve;
+            })
+          : nativeStat.call(fs.promises, filePath, ...args),
+      );
+      const open = spyOn(lumine.workspace, "open");
+      const error = spyOn(lumine.notifications, "addError");
+      const operation = service.runAction(job, "open-pdf");
+      await conditionPromise(() => Boolean(release), "the PDF action's file check");
+      if (retirement === "removed log") service.removeLog(job.id);
+      else
+        await lumine.packages.deactivatePackage(
+          retirement === "provider" ? "typst-tools" : "tasks",
+        );
+      release({ isFile: () => true, size: 32 });
+      expect(await operation).toBeFalse();
+      await Promise.resolve();
+      expect(open).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+    });
+
+  it("cancels a pending PDF open when its execution log is removed", async () => {
+    fs.writeFileSync(source.replace(/\.typ$/, ".pdf"), "%PDF-1.7\nCompiled output\n");
+    const job = await started();
+    await finish(job);
+    let release, signal;
+    spyOn(lumine.workspace, "open").and.callFake((_filePath, options) => {
+      signal = options.signal;
+      return new Promise((resolve) => {
+        release = resolve;
+      });
+    });
+    const operation = service.runAction(job, "open-pdf");
+    await conditionPromise(() => Boolean(release), "the pending PDF open");
+    expect(signal.aborted).toBeFalse();
+    service.removeLog(job.id);
+    expect(signal.aborted).toBeTrue();
+    release({});
+    expect(await operation).toBeFalse();
   });
 
   for (const splitCharacter of ["┌", "é"])
@@ -256,6 +451,42 @@ describe("Typst compilation through Tasks", () => {
     expect(main.getCompileOnSaveFiles()).toEqual([]);
     expect(lumine.commands.canDispatch(editor.getElement(), "typst-tools:compile")).toBeFalse();
     expect(lumine.commands.canDispatch(editor.getElement(), "typst-tools:watch")).toBeFalse();
+  });
+
+  it("builds one external source edit without repeating for output writes or duplicate observation hints", async () => {
+    const hint = sourceObservationHints();
+    await observeSource();
+    fs.writeFileSync(source, "Externally edited Typst source\n");
+    await conditionPromise(() => children.length === 1, "the observed Typst compilation", 3000);
+    const job = service.getJob({ providerId: "typst-tools", filePath: source });
+    expect(job.reason).toBe("save");
+    expect(job.state).toBe("running");
+    for (const extension of ["pdf", "png", "svg"])
+      fs.writeFileSync(source.replace(/\.typ$/, `.${extension}`), `Generated ${extension}\n`);
+    hint();
+    await timeoutPromise(400);
+    expect(children.length).toBe(1);
+    await finish(job);
+    expect(job.state).toBe("passed");
+    for (const extension of ["pdf", "png", "svg"])
+      fs.appendFileSync(source.replace(/\.typ$/, `.${extension}`), "Later output update\n");
+    hint();
+    await timeoutPromise(500);
+    expect(children.length).toBe(1);
+    expect(service.getJobs({ providerId: "typst-tools" })).toEqual([job]);
+  });
+
+  it("keeps observation idle for generated outputs and source rewrites with identical contents", async () => {
+    const hint = sourceObservationHints();
+    await observeSource();
+    for (const extension of ["pdf", "png", "svg"])
+      fs.writeFileSync(source.replace(/\.typ$/, `.${extension}`), `Generated ${extension}\n`);
+    fs.writeFileSync(source, fs.readFileSync(source));
+    hint();
+    await timeoutPromise(500);
+    expect(children.length).toBe(0);
+    expect(service.getJobs({ providerId: "typst-tools" })).toEqual([]);
+    expect(main.isCompileOnSaveEnabledForFile(source)).toBeTrue();
   });
 
   it("leaves automatic None-grammar policy to Tasks while observation remains enabled", async () => {
